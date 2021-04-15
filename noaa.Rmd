@@ -1,0 +1,186 @@
+---
+title: "noaa_project"
+author: "Me"
+date: "4/12/2021"
+output: html_document
+---
+
+##  Title Project
+Does the document have a title that briefly summarizes the data analysis?
+
+## Synopsis
+
+Does the document have a synopsis that describes and summarizes the data analysis in less than 10 sentences?
+
+
+##  Data Processing
+
+Thanks to Mentor Usama Khalil's useful post on cleaning the storm data. [https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  Reference for how to handle coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
+
+
+```{r cache=TRUE}
+library(downloader)
+fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+download.file(fileUrl, destfile = "noaa.csv.bz2", method="curl")
+data <- read.csv("noaa.csv.bz2")
+```
+
+
+
+``` {r}
+##Examine data
+str(data)
+```
+
+### Data Transformation
+
+#### Data filtering based on number of weather events in data set
+
+From the NOAA website, I learned that starting in 1996, 48 event types are recorded in the Storm Events Database.  Before 1996, only tornado (1950-present), thunderstorm, wind and hail (1955-present) were recorded. [https://www.ncdc.noaa.gov/stormevents/details.jsp]  Because this assignment asks us to determine which events have thwe beggest effect on human health or largest economic impact, I have filtered for data set to only include records with the complete set of event data from 1996.
+
+```{r filter_date, cache=TRUE}
+library(lubridate)
+data$YEAR <- year(mdy_hms(data$BGN_DATE)) 
+new_df <- data[data$YEAR > 1995,]
+```
+
+#### Cleaning the event type names
+
+The event names are not all coded in the same way, so I created a new variable, event, that has all lower case letters and standardized event names by making the following transformations: 
+
+* tolower was used to change the event names to lower case
+* grepl was used to find the index of for all variations of a specific event type 
+* the index was used to replace all variations with the official name, as stated in the documentation.[https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf]
+
+```{r official_names, cache=TRUE}
+
+new_df$event <- tolower(new_df$EVTYPE)
+
+official_event_names <- tolower(c("Astronomical Low Tide", "Avalanche,     Blizzard", "Coastal Flood","Cold/Wind Chill", "Debris Flow", "Dense Fog", "Dense Smoke", "Drought", "Dust Devil", "Dust Storm", "Excessive Heat", "Extreme Cold/Wind Chill", "Flash Flood", "Flood", "Frost/Freeze", "Funnel Cloud",  "Freezing Fog", "Hail", "Heat", "Heavy Rain", "Heavy Snow",  "High Surf", "High Wind", "Hurricane/Typhoon", "Ice Storm", "Lake-Effect-Snow", "Lakeshore Flood", "Lightning",  "Marine Hail", "Marine High Wind", "Marine Strong Wind", "Marine Thunderstorm Wind", "Rip Current", "Seiche", "Sleet",
+ "Storm Surge/Tide", "Strong Wind", "Thunderstorm Wind", "Tornado", "Tropical Depression", "Tropical Storm",  "Tsunami", "Volcanic Ash", "Waterspout", "Wildfire",  "Winter Storm", "Winter Weather"))
+```
+
+```{r find_index, cache=TRUE}
+a <- grepl("ashfall", new_df$event)
+c <- grepl("coastal flood", new_df$event)
+cf <- grepl("cstl flood", new_df$event)
+cd <- grepl("[Cc]old", new_df$event)
+f <- grepl("flash", new_df$event)
+fz <- grepl("freeze", new_df$event)
+fr <- grepl("freezing rain", new_df$event)
+h <- grepl("hail", new_df$event)
+hr <- grepl("hurricane", new_df$event)
+l <- grepl("lake effect", new_df$event)
+s <- grepl("snow", new_df$event)
+sg <- grepl("surge", new_df$event)
+sf <- grepl("surf", new_df$event)
+t <- grepl("typhoon", new_df$event)
+ts <- grepl("tstm", new_df$event)
+wc <- grepl("windchill", new_df$event)
+```
+
+```{r replace_names, cache=TRUE}
+library(stringr)
+new_df$event[a == TRUE] <- "volcanic ash"
+new_df$event[c == TRUE | cf == TRUE] <- "coastal flood"
+new_df$event[c == TRUE] <- "extreme cold/wind chill"
+new_df$event[wc == TRUE] <- "extreme cold/wind chill"
+new_df$event[f == TRUE] <- "flash flood"
+new_df$event[fr == TRUE] <- "sleet"
+new_df$event[fz == TRUE] <- "frost/freeze"
+new_df$event[h == TRUE] <- "hail"
+new_df$event[l == TRUE] <- "lake-effect"
+new_df$event[sf == TRUE] <- "high surf"
+new_df$event[s == TRUE] <- "heavy snow"
+new_df$event[sg == TRUE] <- "storm surge/tide"
+new_df$event[t == TRUE | hr == TRUE] <- "hurricane/typhoon"
+new_df$event[ts == TRUE] <- "tsunami"
+new_df$event <- str_replace(new_df$event, "strong winds", "strong wind")
+new_df$event <- str_replace(new_df$event, "rip currents", "rip current")
+new_df$event <- str_replace_all(new_df$event, "high wind (g40)", "high wind")
+```
+
+There are some event names that are are not clearly in one of the standarized event types.  I decided to delete this instances from the data base. I checked to see which events did not match the official list after the above standardization.  
+
+```{r check_names}
+bad_names <- setdiff(new_df$event, official_event_names)
+```
+
+Check to see which event types are still not standardized.
+* Data filtering based on values of PROPDMGEXP and CROPDMGEXP
+
+```{r}
+missing <- sum(new_df$PROPDMGEXP=="" & new_df$CROPDMGEXP=="")
+```
+
+When determining the weather events that have the most significant economic effect,  I have subsetted the data to include only records with positive values for both the property damage variable, PROPDMGEXP and the CROPDMGEXP.  This eliminates  `r missing` observations. I was aided in my analysis by reading this discussion of the coding of CROPDMGEXP and PROPDMGEXP. [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
+
+```{r filter_damage}
+damage_df <- new_df[new_df$CROPDMGEXP != "" | new_df$PROPDMGEXP != "", ]
+```
+
+In the documentation, it is noted that the units for the economic damage is coded in the variable PROPDMGEXP, so I transformed the PROPDMG variable before finding summary statistics to account for units.  The function transform takes the variables PROPDMGEXP (or CROPDMGEXP) and PROPDMG (or CROPDMG) and changes PROPDMG so that all data are denominated in the same units.  
+
+```{r change_units}
+transform <- function (x, y) {
+
+        if (x == "H" | x == "h")
+                {y <- y * 10
+        } else if (x == "K" | x == "k") 
+                {y <- y * 10^3
+        } else if (x == "M" | x == "m") 
+                {y <- y * 10^6
+        } else if (x == "B" | x == "b") 
+                {y <- y * 10^9
+        } else if (x == "-" | x == "?")
+                {y <- 0
+        }
+        y
+}
+
+damage_df$VALUE_ADJ_CROPDMG <- mapply(transform, damage_df$CROPDMGEXP, damage_df$CROPDMG)
+damage_df$VALUE_ADJ_PROPDMG <- mapply(transform, damage_df$PROPDMGEXP, damage_df$PROPDMG)
+```
+
+Group by event type and year and find the average property (crop) damage.
+
+```{r average economic damage, cache=TRUE}
+library(dplyr)
+economic_damage <- damage_df %>% group_by(event, YEAR) %>%              summarize(average_property_damage
+                = mean(VALUE_ADJ_PROPDMG), 
+                average_crop_damage = mean(VALUE_ADJ_CROPDMG),
+                total_property_damage = sum(VALUE_ADJ_PROPDMG),
+                total_property_damage = sum(VALUE_ADJ_PROPDMG))
+```
+
+*  Describe how the data were loaded into R and processed for analysis
+*  Does the analysis include description and justification for any data           transformations?
+
+Since different weather events affect different localities differently, I grouped by state when calculating the total number of fatalities/injuries and property damage.
+
+
+
+
+
+
+
+## Results
+
+* main results are presented
+* Which types of events are most harmful to population health?
+* Which types of events have the greatest economic consequences?
+
+Consider writing your report as if it were to be read by a government or municipal manager who might be responsible for preparing for severe weather events and will need to prioritize resources for different types of events. However, there is no need to make any specific recommendations in your report.
+
+
+## Must contain 1-3 figures
+
+
+Review Criteria:  
+Is there at least one figure in the document that contains a plot?
+Are there at most 3 figures in this document?
+Does the analysis start from the raw data file (i.e. the original .csv.bz2 file)?
+
+Do all the results of the analysis (i.e. figures, tables, numerical summaries) appear to be reproducible?
+Do the figure(s) have descriptive captions (i.e. there is a description near the figure of what is happening in the figure)?
+As far as you can determine, does it appear that the work submitted for this project is the work of the student who submitted it?
