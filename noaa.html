@@ -394,6 +394,21 @@ summary {
 fileUrl &lt;- &quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2&quot;
 download.file(fileUrl, destfile = &quot;noaa.csv.bz2&quot;, method=&quot;curl&quot;)
 data &lt;- read.csv(&quot;noaa.csv.bz2&quot;)</code></pre>
+<div id="data-transformation" class="section level3">
+<h3>Data Transformation</h3>
+<div id="data-filtering-based-on-number-of-weather-events-in-data-set" class="section level4">
+<h4>Data filtering based on number of weather events in data set</h4>
+<p>From the NOAA website, I learned that starting in 1996, 48 event types are recorded in the Storm Events Database. Before 1996, only tornado (1950-present), thunderstorm, wind and hail (1955-present) were recorded. [<a href="https://www.ncdc.noaa.gov/stormevents/details.jsp" class="uri">https://www.ncdc.noaa.gov/stormevents/details.jsp</a>] Because this assignment asks us to determine which events have thwe beggest effect on human health or largest economic impact, I have filtered for data set to only include records with the complete set of event data from 1996.</p>
+<pre class="r"><code>library(lubridate)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;lubridate&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     date, intersect, setdiff, union</code></pre>
+<pre class="r"><code>data$YEAR &lt;- year(mdy_hms(data$BGN_DATE)) 
+new_df &lt;- data[data$YEAR &gt; 1995,]</code></pre>
+</div>
+</div>
 </div>
 
 

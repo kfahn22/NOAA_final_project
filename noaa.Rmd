@@ -25,5 +25,16 @@ download.file(fileUrl, destfile = "noaa.csv.bz2", method="curl")
 data <- read.csv("noaa.csv.bz2")
 ```
 
+### Data Transformation
+
+#### Data filtering based on number of weather events in data set
+
+From the NOAA website, I learned that starting in 1996, 48 event types are recorded in the Storm Events Database.  Before 1996, only tornado (1950-present), thunderstorm, wind and hail (1955-present) were recorded. [https://www.ncdc.noaa.gov/stormevents/details.jsp]  Because this assignment asks us to determine which events have thwe beggest effect on human health or largest economic impact, I have filtered for data set to only include records with the complete set of event data from 1996.
+
+```{r filter_date, cache=TRUE}
+library(lubridate)
+data$YEAR <- year(mdy_hms(data$BGN_DATE)) 
+new_df <- data[data$YEAR > 1995,]
+```
 
 
