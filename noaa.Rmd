@@ -37,4 +37,58 @@ data$YEAR <- year(mdy_hms(data$BGN_DATE))
 new_df <- data[data$YEAR > 1995,]
 ```
 
+#### Cleaning the event type names
 
+The event names are not all coded in the same way, so I created a new variable, event, that has all lower case letters and standardized event names by making the following transformations: 
+
+* tolower was used to change the event names to lower case
+* grepl was used to find the index of for all variations of a specific event type 
+* the index was used to replace all variations with the official name, as stated in the documentation.[https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf]
+
+```{r official_names, cache=TRUE}
+
+new_df$event <- tolower(new_df$EVTYPE)
+
+official_event_names <- tolower(c("Astronomical Low Tide", "Avalanche,     Blizzard", "Coastal Flood","Cold/Wind Chill", "Debris Flow", "Dense Fog", "Dense Smoke", "Drought", "Dust Devil", "Dust Storm", "Excessive Heat", "Extreme Cold/Wind Chill", "Flash Flood", "Flood", "Frost/Freeze", "Funnel Cloud",  "Freezing Fog", "Hail", "Heat", "Heavy Rain", "Heavy Snow",  "High Surf", "High Wind", "Hurricane/Typhoon", "Ice Storm", "Lake-Effect-Snow", "Lakeshore Flood", "Lightning",  "Marine Hail", "Marine High Wind", "Marine Strong Wind", "Marine Thunderstorm Wind", "Rip Current", "Seiche", "Sleet",
+ "Storm Surge/Tide", "Strong Wind", "Thunderstorm Wind", "Tornado", "Tropical Depression", "Tropical Storm",  "Tsunami", "Volcanic Ash", "Waterspout", "Wildfire",  "Winter Storm", "Winter Weather"))
+```
+
+```{r find_index, cache=TRUE}
+a <- grepl("ashfall", new_df$event)
+c <- grepl("coastal flood", new_df$event)
+cf <- grepl("cstl flood", new_df$event)
+cd <- grepl("[Cc]old", new_df$event)
+f <- grepl("flash", new_df$event)
+fz <- grepl("freeze", new_df$event)
+fr <- grepl("freezing rain", new_df$event)
+h <- grepl("hail", new_df$event)
+hr <- grepl("hurricane", new_df$event)
+l <- grepl("lake effect", new_df$event)
+s <- grepl("snow", new_df$event)
+sg <- grepl("surge", new_df$event)
+sf <- grepl("surf", new_df$event)
+t <- grepl("typhoon", new_df$event)
+ts <- grepl("tstm", new_df$event)
+wc <- grepl("windchill", new_df$event)
+```
+
+```{r replace_names, cache=TRUE}
+library(stringr)
+new_df$event[a == TRUE] <- "volcanic ash"
+new_df$event[c == TRUE | cf == TRUE] <- "coastal flood"
+new_df$event[c == TRUE] <- "extreme cold/wind chill"
+new_df$event[wc == TRUE] <- "extreme cold/wind chill"
+new_df$event[f == TRUE] <- "flash flood"
+new_df$event[fr == TRUE] <- "sleet"
+new_df$event[fz == TRUE] <- "frost/freeze"
+new_df$event[h == TRUE] <- "hail"
+new_df$event[l == TRUE] <- "lake-effect"
+new_df$event[sf == TRUE] <- "high surf"
+new_df$event[s == TRUE] <- "heavy snow"
+new_df$event[sg == TRUE] <- "storm surge/tide"
+new_df$event[t == TRUE | hr == TRUE] <- "hurricane/typhoon"
+new_df$event[ts == TRUE] <- "tsunami"
+new_df$event <- str_replace(new_df$event, "strong winds", "strong wind")
+new_df$event <- str_replace(new_df$event, "rip currents", "rip current")
+new_df$event <- str_replace_all(new_df$event, "high wind (g40)", "high wind")
+```
