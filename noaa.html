@@ -423,13 +423,17 @@ official_event_names &lt;- tolower(c(&quot;Astronomical Low Tide&quot;, &quot;Av
 <pre class="r"><code>a &lt;- grepl(&quot;ashfall&quot;, new_df$event)
 c &lt;- grepl(&quot;coastal flood&quot;, new_df$event)
 cf &lt;- grepl(&quot;cstl flood&quot;, new_df$event)
-cd &lt;- grepl(&quot;[Cc]old&quot;, new_df$event)
+cd &lt;- grepl(&quot;[Dd]ry&quot;, new_df$event)
+d &lt;- grepl(&quot;[Cc]old&quot;, new_df$event)
 f &lt;- grepl(&quot;flash&quot;, new_df$event)
 fz &lt;- grepl(&quot;freeze&quot;, new_df$event)
 fr &lt;- grepl(&quot;freezing rain&quot;, new_df$event)
 h &lt;- grepl(&quot;hail&quot;, new_df$event)
 hr &lt;- grepl(&quot;hurricane&quot;, new_df$event)
 l &lt;- grepl(&quot;lake effect&quot;, new_df$event)
+rp &lt;- grepl(&quot;record precipitation&quot;, new_df$event)
+rf &lt;- grepl(&quot;rainfall&quot;, new_df$event)
+r &lt;- grepl(&quot;rain&quot;, new_df$event)
 s &lt;- grepl(&quot;snow&quot;, new_df$event)
 sg &lt;- grepl(&quot;surge&quot;, new_df$event)
 sf &lt;- grepl(&quot;surf&quot;, new_df$event)
@@ -439,9 +443,10 @@ wc &lt;- grepl(&quot;windchill&quot;, new_df$event)</code></pre>
 <pre class="r"><code>library(stringr)
 new_df$event[a == TRUE] &lt;- &quot;volcanic ash&quot;
 new_df$event[c == TRUE | cf == TRUE] &lt;- &quot;coastal flood&quot;
-new_df$event[c == TRUE] &lt;- &quot;extreme cold/wind chill&quot;
-new_df$event[wc == TRUE] &lt;- &quot;extreme cold/wind chill&quot;
+new_df$event[c == TRUE | wc == TRUE] &lt;- &quot;extreme cold/wind chill&quot;
+new_df$event[d== TRUE] &lt;- &quot;drought&quot;
 new_df$event[f == TRUE] &lt;- &quot;flash flood&quot;
+new_df$event[rf==TRUE | rp==TRUE | r==TRUE ] &lt;- &quot;heavy rain&quot;
 new_df$event[fr == TRUE] &lt;- &quot;sleet&quot;
 new_df$event[fz == TRUE] &lt;- &quot;frost/freeze&quot;
 new_df$event[h == TRUE] &lt;- &quot;hail&quot;
@@ -453,7 +458,11 @@ new_df$event[t == TRUE | hr == TRUE] &lt;- &quot;hurricane/typhoon&quot;
 new_df$event[ts == TRUE] &lt;- &quot;tsunami&quot;
 new_df$event &lt;- str_replace(new_df$event, &quot;strong winds&quot;, &quot;strong wind&quot;)
 new_df$event &lt;- str_replace(new_df$event, &quot;rip currents&quot;, &quot;rip current&quot;)
-new_df$event &lt;- str_replace_all(new_df$event, &quot;high wind (g40)&quot;, &quot;high wind&quot;)</code></pre>
+new_df$event &lt;- str_replace_all(new_df$event, &quot;high wind (g40)&quot;, &quot;high wind&quot;)
+new_df$event &lt;- str_replace_all(new_df$event, &quot;dust devel&quot;, &quot;dust devil&quot;)
+new_df$event &lt;- str_replace_all(new_df$event, &quot;ice fog&quot;, &quot;freezing fog&quot;)</code></pre>
+<p>There are some event names that are are not clearly in one of the standarized event types. I decided to delete this instances from the data base. I checked to see which events did not match the official list after the above standardization.</p>
+<pre class="r"><code>bad_names &lt;- setdiff(new_df$event, official_event_names)</code></pre>
 </div>
 </div>
 </div>

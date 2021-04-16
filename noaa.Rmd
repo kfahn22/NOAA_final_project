@@ -57,28 +57,34 @@ official_event_names <- tolower(c("Astronomical Low Tide", "Avalanche,     Blizz
 a <- grepl("ashfall", new_df$event)
 c <- grepl("coastal flood", new_df$event)
 cf <- grepl("cstl flood", new_df$event)
-cd <- grepl("[Cc]old", new_df$event)
+cd <- grepl("[Dd]ry", new_df$event)
+d <- grepl("[Cc]old", new_df$event)
 f <- grepl("flash", new_df$event)
 fz <- grepl("freeze", new_df$event)
 fr <- grepl("freezing rain", new_df$event)
 h <- grepl("hail", new_df$event)
 hr <- grepl("hurricane", new_df$event)
 l <- grepl("lake effect", new_df$event)
+rp <- grepl("record precipitation", new_df$event)
+rf <- grepl("rainfall", new_df$event)
+r <- grepl("rain", new_df$event)
 s <- grepl("snow", new_df$event)
 sg <- grepl("surge", new_df$event)
 sf <- grepl("surf", new_df$event)
 t <- grepl("typhoon", new_df$event)
 ts <- grepl("tstm", new_df$event)
 wc <- grepl("windchill", new_df$event)
+
 ```
 
 ```{r replace_names, cache=TRUE}
 library(stringr)
 new_df$event[a == TRUE] <- "volcanic ash"
 new_df$event[c == TRUE | cf == TRUE] <- "coastal flood"
-new_df$event[c == TRUE] <- "extreme cold/wind chill"
-new_df$event[wc == TRUE] <- "extreme cold/wind chill"
+new_df$event[c == TRUE | wc == TRUE] <- "extreme cold/wind chill"
+new_df$event[d== TRUE] <- "drought"
 new_df$event[f == TRUE] <- "flash flood"
+new_df$event[rf==TRUE | rp==TRUE | r==TRUE ] <- "heavy rain"
 new_df$event[fr == TRUE] <- "sleet"
 new_df$event[fz == TRUE] <- "frost/freeze"
 new_df$event[h == TRUE] <- "hail"
@@ -91,4 +97,12 @@ new_df$event[ts == TRUE] <- "tsunami"
 new_df$event <- str_replace(new_df$event, "strong winds", "strong wind")
 new_df$event <- str_replace(new_df$event, "rip currents", "rip current")
 new_df$event <- str_replace_all(new_df$event, "high wind (g40)", "high wind")
+new_df$event <- str_replace_all(new_df$event, "dust devel", "dust devil")
+new_df$event <- str_replace_all(new_df$event, "ice fog", "freezing fog")
+```
+
+There are some event names that are are not clearly in one of the standarized event types.  I decided to delete this instances from the data base. I checked to see which events did not match the official list after the above standardization.  
+
+```{r check_names}
+bad_names <- setdiff(new_df$event, official_event_names)
 ```
