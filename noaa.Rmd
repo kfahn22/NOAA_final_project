@@ -1,6 +1,6 @@
 ---
 title: "noaa_project"
-author: "Me"
+author: "Kathryn Fahnline"
 date: "4/12/2021"
 output: html_document
 ---
@@ -102,7 +102,8 @@ new_df$event <- str_replace_all(new_df$event, "ice fog", "freezing fog")
 
 There are some event names that are are not clearly in one of the standarized event types.  I decided to delete this instances from the data base. I checked to see which events did not match the official list after the above standardization.  
 
-```{r check_names}
+```{r check_names, cache=TRUE}
+library(dplyr)
 bad_names <- setdiff(new_df$event, official_event_names)
 new_df <- filter(new_df, event %in% official_event_names)
 ```
@@ -110,8 +111,7 @@ new_df <- filter(new_df, event %in% official_event_names)
 Filter data set to exclude rows w/ either missing data for PROPDMGEXP or 
 CROPDMGEXP
 
-```{r filter_NA}
-library(dplyr)
+```{r filter_NA, cache=TRUE}
 econ_df <- new_df[new_df$CROPDMGEXP != "" | 
                         new_df$PROPDMGEXP != "", ]
 ```
@@ -138,7 +138,7 @@ transform <- function (x, y) {
 
 Use transform to adjust CROPDMGEXP and PROPDMGEXP
 
-```{r}
+```{r, units, cache=TRUE}
 econ_df$units_adj_cropdmg <- mapply(transform, 
                 econ_df$CROPDMGEXP, econ_df$CROPDMG)
 econ_df$units_adj_propdmg <- mapply(transform, 
@@ -146,22 +146,18 @@ econ_df$units_adj_propdmg <- mapply(transform,
 ```
 
 Find summary statistics by year for each event type.
-```{r statistics}
-econ_damage <- econ_df %>% group_by(YEAR, event) %>% 
-        summarize(average_crop_damage = mean(units_adj_cropdmg),
-                  median_crop_damage = median(units_adj_cropdmg),
-                  total_crop_damage = sum(units_adj_cropdmg),
-                  average_property_damage = mean(units_adj_propdmg),
-                  median_property_damage = median(units_adj_propdmg),
-                  total_property_damage = sum(units_adj_propdmg) )
-
-
+```{r statistics, cache=TRUE}
+econ_damage <- econ_df %>% group_by(event) %>% 
+                  summarize(total_property_damage = sum(units_adj_propdmg),
+                  total_crop_damage = sum(units_adj_cropdmg) )
+table <- econ_damage %>% arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(10)
 ```
 
 
-```{r Figure 1`}
-library(xtable)
-xt <- xtable(summary(econ_damage))
+```{r Figure 1}
+library(knitr)
+knit_table <- kable(table, caption="Top Ten Most Costly Weather types, by Property and Crop Damage")
+print(knit_table, )
 ```
 
 
