@@ -106,3 +106,42 @@ There are some event names that are are not clearly in one of the standarized ev
 ```{r check_names}
 bad_names <- setdiff(new_df$event, official_event_names)
 ```
+
+Filter data set to exclude rows w/ either missing data for PROPDMGEXP or 
+CROPDMGEXP
+
+```{r filter}
+
+
+econ_df <- new_df[new_df$CROPDMGEXP != "" | 
+                        new_df$PROPDMGEXP != "", ]
+```
+
+Function to adjust for different units in CROPDMGEXP and PROPDMGEXP
+
+```{r transform}
+transform <- function (x, y) {
+
+        if (x == "H" | x == "h")
+                {y <- y * 10
+        } else if (x == "K" | x == "k") 
+                {y <- y * 10^3
+        } else if (x == "M" | x == "m") 
+                {y <- y * 10^6
+        } else if (x == "B" | x == "b") 
+                {y <- y * 10^9
+        } else if (x == "-" | x == "?")
+                 {y <- 0
+        }
+        y
+}
+```
+
+Use transform to adjust CROPDMGEXP and PROPDMGEXP
+
+```{r}
+econ_df$units_adj_cropdmg <- mapply(transform, 
+                econ_df$CROPDMGEXP, econ_df$CROPDMG)
+econ_df$units_adj_propdmg <- mapply(transform, 
+                econ_df$PROPDMGEXP, econ_df$PROPDMG)
+```

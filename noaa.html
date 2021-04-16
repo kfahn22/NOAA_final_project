@@ -463,6 +463,30 @@ new_df$event &lt;- str_replace_all(new_df$event, &quot;dust devel&quot;, &quot;d
 new_df$event &lt;- str_replace_all(new_df$event, &quot;ice fog&quot;, &quot;freezing fog&quot;)</code></pre>
 <p>There are some event names that are are not clearly in one of the standarized event types. I decided to delete this instances from the data base. I checked to see which events did not match the official list after the above standardization.</p>
 <pre class="r"><code>bad_names &lt;- setdiff(new_df$event, official_event_names)</code></pre>
+<p>Filter data set to exclude rows w/ either missing data for PROPDMGEXP or CROPDMGEXP</p>
+<pre class="r"><code>econ_df &lt;- new_df[new_df$CROPDMGEXP != &quot;&quot; | 
+                        new_df$PROPDMGEXP != &quot;&quot;, ]</code></pre>
+<p>Function to adjust for different units in CROPDMGEXP and PROPDMGEXP</p>
+<pre class="r"><code>transform &lt;- function (x, y) {
+
+        if (x == &quot;H&quot; | x == &quot;h&quot;)
+                {y &lt;- y * 10
+        } else if (x == &quot;K&quot; | x == &quot;k&quot;) 
+                {y &lt;- y * 10^3
+        } else if (x == &quot;M&quot; | x == &quot;m&quot;) 
+                {y &lt;- y * 10^6
+        } else if (x == &quot;B&quot; | x == &quot;b&quot;) 
+                {y &lt;- y * 10^9
+        } else if (x == &quot;-&quot; | x == &quot;?&quot;)
+                 {y &lt;- 0
+        }
+        y
+}</code></pre>
+<p>Use transform to adjust CROPDMGEXP and PROPDMGEXP</p>
+<pre class="r"><code>econ_df$units_adj_cropdmg &lt;- mapply(transform, 
+                econ_df$CROPDMGEXP, econ_df$CROPDMG)
+econ_df$units_adj_propdmg &lt;- mapply(transform, 
+                econ_df$PROPDMGEXP, econ_df$PROPDMG)</code></pre>
 </div>
 </div>
 </div>
