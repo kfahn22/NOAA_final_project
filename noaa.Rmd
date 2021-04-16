@@ -160,5 +160,37 @@ knit_table <- kable(table, caption="Top Ten Most Costly Weather types, by Proper
 print(knit_table, )
 ```
 
+#### Create plot of yearly economic damage by the top 5 most destructive weather event types.  
 
+* Create a new data set and subset to the top 5 most damaging weather types
+* Change event to a factor variable
+* Filter the data set to include only the top 5 most damaging weather types
+* Create a line plot 
+* The y axix is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger that it was necessary to change to a log scale.
+
+```{r plot}
+library(ggplot2)
+library(dplyr)
+top_damage <- filter(econ_damage, event %in% official_event_names) %>%
+          arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(5)
+
+##create new data frame to plot
+df <- econ_df %>% group_by(YEAR, event) %>% 
+        summarize(total_property_damage = sum(units_adj_propdmg/10^6),
+                  total_crop_damage = sum(units_adj_cropdmg/10^6)) 
+
+plot <- filter(df, event %in% top_damage$event)
+plot$event <- as.factor(plot$event)
+
+m <- max(plot$total_property_damage)
+
+g <- ggplot(data=plot, aes(x=YEAR, y=log(total_property_damage)))
+g + geom_line(col="steelblue") +
+        ggtitle("Total Property and Crop Damage, 1996-2011") +
+        facet_grid(.~ event) + 
+        coord_cartesian(ylim=c(0, log(m))) +
+        labs(y="Total cost in log(Millions of dollars)")
+
+
+```
 
