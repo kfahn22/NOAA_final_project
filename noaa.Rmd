@@ -46,7 +46,6 @@ The event names are not all coded in the same way, so I created a new variable, 
 * the index was used to replace all variations with the official name, as stated in the documentation.[https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf]
 
 ```{r official_names, cache=TRUE}
-
 new_df$event <- tolower(new_df$EVTYPE)
 
 official_event_names <- tolower(c("Astronomical Low Tide", "Avalanche,     Blizzard", "Coastal Flood","Cold/Wind Chill", "Debris Flow", "Dense Fog", "Dense Smoke", "Drought", "Dust Devil", "Dust Storm", "Excessive Heat", "Extreme Cold/Wind Chill", "Flash Flood", "Flood", "Frost/Freeze", "Funnel Cloud",  "Freezing Fog", "Hail", "Heat", "Heavy Rain", "Heavy Snow",  "High Surf", "High Wind", "Hurricane/Typhoon", "Ice Storm", "Lake-Effect-Snow", "Lakeshore Flood", "Lightning",  "Marine Hail", "Marine High Wind", "Marine Strong Wind", "Marine Thunderstorm Wind", "Rip Current", "Seiche", "Sleet",
@@ -105,14 +104,14 @@ There are some event names that are are not clearly in one of the standarized ev
 
 ```{r check_names}
 bad_names <- setdiff(new_df$event, official_event_names)
+new_df <- filter(new_df, event %in% official_event_names)
 ```
 
 Filter data set to exclude rows w/ either missing data for PROPDMGEXP or 
 CROPDMGEXP
 
-```{r filter}
-
-
+```{r filter_NA}
+library(dplyr)
 econ_df <- new_df[new_df$CROPDMGEXP != "" | 
                         new_df$PROPDMGEXP != "", ]
 ```
@@ -145,3 +144,25 @@ econ_df$units_adj_cropdmg <- mapply(transform,
 econ_df$units_adj_propdmg <- mapply(transform, 
                 econ_df$PROPDMGEXP, econ_df$PROPDMG)
 ```
+
+Find summary statistics by year for each event type.
+```{r statistics}
+econ_damage <- econ_df %>% group_by(YEAR, event) %>% 
+        summarize(average_crop_damage = mean(units_adj_cropdmg),
+                  median_crop_damage = median(units_adj_cropdmg),
+                  total_crop_damage = sum(units_adj_cropdmg),
+                  average_property_damage = mean(units_adj_propdmg),
+                  median_property_damage = median(units_adj_propdmg),
+                  total_property_damage = sum(units_adj_propdmg) )
+
+
+```
+
+
+```{r Figure 1`}
+library(xtable)
+xt <- xtable(summary(econ_damage))
+```
+
+
+

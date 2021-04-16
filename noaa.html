@@ -462,9 +462,11 @@ new_df$event &lt;- str_replace_all(new_df$event, &quot;high wind (g40)&quot;, &q
 new_df$event &lt;- str_replace_all(new_df$event, &quot;dust devel&quot;, &quot;dust devil&quot;)
 new_df$event &lt;- str_replace_all(new_df$event, &quot;ice fog&quot;, &quot;freezing fog&quot;)</code></pre>
 <p>There are some event names that are are not clearly in one of the standarized event types. I decided to delete this instances from the data base. I checked to see which events did not match the official list after the above standardization.</p>
-<pre class="r"><code>bad_names &lt;- setdiff(new_df$event, official_event_names)</code></pre>
+<pre class="r"><code>bad_names &lt;- setdiff(new_df$event, official_event_names)
+new_df &lt;- filter(new_df, event %in% official_event_names)</code></pre>
 <p>Filter data set to exclude rows w/ either missing data for PROPDMGEXP or CROPDMGEXP</p>
-<pre class="r"><code>econ_df &lt;- new_df[new_df$CROPDMGEXP != &quot;&quot; | 
+<pre class="r"><code>library(dplyr)
+econ_df &lt;- new_df[new_df$CROPDMGEXP != &quot;&quot; | 
                         new_df$PROPDMGEXP != &quot;&quot;, ]</code></pre>
 <p>Function to adjust for different units in CROPDMGEXP and PROPDMGEXP</p>
 <pre class="r"><code>transform &lt;- function (x, y) {
@@ -487,6 +489,17 @@ new_df$event &lt;- str_replace_all(new_df$event, &quot;ice fog&quot;, &quot;free
                 econ_df$CROPDMGEXP, econ_df$CROPDMG)
 econ_df$units_adj_propdmg &lt;- mapply(transform, 
                 econ_df$PROPDMGEXP, econ_df$PROPDMG)</code></pre>
+<p>Find summary statistics by year for each event type.</p>
+<pre class="r"><code>econ_damage &lt;- econ_df %&gt;% group_by(YEAR, event) %&gt;% 
+        summarize(average_crop_damage = mean(units_adj_cropdmg),
+                  median_crop_damage = median(units_adj_cropdmg),
+                  total_crop_damage = sum(units_adj_cropdmg),
+                  average_property_damage = mean(units_adj_propdmg),
+                  median_property_damage = median(units_adj_propdmg),
+                  total_property_damage = sum(units_adj_propdmg) )</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;YEAR&#39;. You can override using the `.groups` argument.</code></pre>
+<pre class="r"><code>library(xtable)
+xt &lt;- xtable(summary(econ_damage))</code></pre>
 </div>
 </div>
 </div>
