@@ -1,14 +1,15 @@
 ---
-title: "noaa_project"
+title: "Historical Weather Event Dominates Economic Damage, while Excessive Heat leads to most deaths "
 author: "Kathryn Fahnline"
 date: "4/12/2021"
 output: html_document
 ---
 
-##  Title Project
-Does the document have a title that briefly summarizes the data analysis?
+
 
 ## Synopsis
+
+It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  (add more detail here)  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harms way.  This is less likely to be true when there is a forecast of higher than normal temperatures; hence the greater death rate.  Other the other hand, tornados lead to a greater number of injuries, perhaps due to air-born debrie.   
 
 Does the document have a synopsis that describes and summarizes the data analysis in less than 10 sentences?
 
@@ -157,7 +158,7 @@ table <- econ_damage %>% arrange(desc(total_property_damage, total_crop_damage))
 ```{r Figure 1}
 library(knitr)
 knit_table <- kable(table, caption="Top Ten Most Costly Weather types, by Property and Crop Damage")
-print(knit_table, )
+print(knit_table)
 ```
 
 #### Create plot of yearly economic damage by the top 5 most destructive weather event types.  
@@ -168,7 +169,7 @@ print(knit_table, )
 * Create a line plot 
 * The y axix is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger that it was necessary to change to a log scale.
 
-```{r plot}
+```{r Figure2}
 library(ggplot2)
 library(dplyr)
 top_damage <- filter(econ_damage, event %in% official_event_names) %>%
@@ -190,7 +191,22 @@ g + geom_line(col="steelblue") +
         facet_grid(.~ event) + 
         coord_cartesian(ylim=c(0, log(m))) +
         labs(y="Total cost in log(Millions of dollars)")
-
-
 ```
 
+### Which weather type most impacts human health?
+
+```{r health}
+health <- new_df %>% group_by(event) %>% 
+        summarize(total_fatalities = sum(FATALITIES),
+                  total_injuries = sum(INJURIES) )
+
+health <- filter(health, event %in% official_event_names)
+health_table <- health %>% 
+        arrange(desc(total_fatalities, total_injuries)) %>% top_n(10)
+```
+
+```{r Figure 3}
+library(knitr)
+knit_health_table <- kable(health_table, caption="Top Ten Weather types that most Impact Human Health")
+print(knit_health_table)
+```
