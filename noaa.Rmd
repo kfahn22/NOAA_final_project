@@ -1,5 +1,5 @@
 ---
-title: "Historical Weather Event Dominates Economic Damage, while Excessive Heat leads to most deaths "
+title: "Historical Weather Event Dominates Economic Damage, while Excessive Heat Leads to Most Deaths "
 author: "Kathryn Fahnline"
 date: "4/12/2021"
 output: 
@@ -11,7 +11,7 @@ output:
 
 ## Synopsis
 
-It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  (add more detail here)  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harms way.  This is less likely to be true when there is a forecast of higher than normal temperatures; hence the greater death rate.  Other the other hand, tornados lead to a greater number of injuries, perhaps due to air-born debrie.   
+It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  (add more detail here)  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way.  This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  Other the other hand, tornados lead to a greater number of injuries, perhaps due to air-born debrie.   
 
 Does the document have a synopsis that describes and summarizes the data analysis in less than 10 sentences?
 
@@ -164,16 +164,30 @@ econ_df$units_adj_propdmg <- mapply(transform,
 
 ```{r statistics, cache=TRUE}
 econ_damage <- econ_df %>% group_by(event) %>% 
-                  summarize(total_property_damage = sum(units_adj_propdmg),
-                  total_crop_damage = sum(units_adj_cropdmg) )
+                  summarize(total_property_damage =                                             sprintf("%.2f",sum(units_adj_propdmg)/10^6),
+                  total_crop_damage = sprintf("%.2f", sum(units_adj_cropdmg)/10^6) )
 table <- econ_damage %>% arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(10)
 ```
 
-
-```{r Figure 1}
-library(knitr)
-knit_table <- kable(table, caption="Top Ten Most Costly Weather types, by Property and Crop Damage")
-print(knit_table)
+```{r fig1, results = "asis"}
+library(gt)
+gt_tbl <- gt(table)
+gt_tbl <- gt_tbl %>%
+ tab_header(
+    title = "Top Ten Most Costly Weather Types, by Property and Crop Damage",
+    subtitle = "Millions of Dollars"
+) 
+gt_tbl <- gt_tbl %>%
+  tab_source_note(
+  source_note = "Source:  NOAA Storm Data"
+)
+gt_tbl <- gt_tbl %>% cols_label(
+  event = "Event",
+  total_property_damage = "Total Property Damage",
+  total_crop_damage = "Total Crop Damage"
+)
+gt_tbl <- opt_row_striping(gt_tbl, row_striping = TRUE)
+gt_tbl
 ```
 
 #### Create plot of yearly economic damage by the top 5 most destructive weather event types.  
@@ -184,7 +198,7 @@ print(knit_table)
 * Create a panel plot of the economic damage for the top 5 most damaging weather event types
 * The y axis is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger than the damage from other events that it was necessary to change to a log scale.
 
-```{r Figure2}
+```{r fig2}
 library(ggplot2)
 library(dplyr)
 top_damage <- filter(econ_damage, event %in% official_event_names) %>%
@@ -208,7 +222,7 @@ g + geom_line(col="steelblue") +
         labs(y="Total cost in log(Millions of dollars)")
 ```
 
-### Which weather type most impacts human health?
+### Which Weather Type Most Impacts Human Health?
 
 ```{r health}
 health <- data %>% group_by(event) %>% 
@@ -220,23 +234,16 @@ health_table <- health %>%
         arrange(desc(total_fatalities, total_injuries)) %>% top_n(10)
 ```
 
-```{r showtable, results="asis"}
-library(xtable)
-xt <- xtable(health_table, caption = "\\tt Weather Types Ranked by Impact on Human Health", auto=TRUE)
-#print(xt, floating = TRUE, type="html", include.rownames = FALSE, size=
- #       "\\setlength{\\tabcolsep}{15pt}")
-print(xt, type="html", include.rownames = FALSE, booktabs=TRUE)
-#align(xt) <- "|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|"
-#align(xt) <- rep("r", 4)
 
+```{r fig3, results = "asis"}
+library(gt)
+ht_tbl <- gt(health_table)
+ht_tbl <- ht_tbl %>%
+ tab_header(
+    title = "Weather Types Ranked by Impact on Human Health",
+) 
+
+ht_tbl
 ```
 
-```{r try2, results="asis"}
-library(xtable)
-xt2 <- xtable(health_table, caption = "\\tt Weather Types Ranked by Impact on Human Health")
-print(xt2, include.rownames = FALSE, size=
-        "\\setlength{\\tabcolsep}{15pt}", floating = TRUE, latex.environments         = "center")
-#align(xt) <- "|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|"
-#align(xt) <- rep("r", 4)
 
-```
