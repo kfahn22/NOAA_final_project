@@ -16,7 +16,7 @@ Does the document have a synopsis that describes and summarizes the data analysi
 
 ##  Data Processing
 
-Thanks to Mentor Usama Khalil's useful post on cleaning the storm data. [https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  Reference for how to handle coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
+Thanks to Mentor Usama Khalil's useful post on cleaning the storm data. [https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  and this guide to handling the coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
 
 
 ```{r cache=TRUE}
@@ -28,14 +28,22 @@ data <- read.csv("noaa.csv.bz2")
 
 ### Data Transformation
 
-#### Data filtering based on number of weather events in data set
+#### Check out data and delete unnecessary columns
 
-From the NOAA website, I learned that starting in 1996, 48 event types are recorded in the Storm Events Database.  Before 1996, only tornado (1950-present), thunderstorm, wind and hail (1955-present) were recorded. [https://www.ncdc.noaa.gov/stormevents/details.jsp]  Because this assignment asks us to determine which events have thwe beggest effect on human health or largest economic impact, I have filtered for data set to only include records with the complete set of event data from 1996.
+```{r explore_structure}
+library(dplyr)
+str(data)
+data <- select(data, c(STATE, BGN_DATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP))
+```
+
+#### Filter data based on number of weather events in data set
+
+From the NOAA website, I learned that starting in 1996, 48 event types are recorded in the Storm Events Database.  Before 1996, only tornado (1950-present), thunderstorm, wind and hail (1955-present) were recorded. [https://www.ncdc.noaa.gov/stormevents/details.jsp]  Because this assignment asks us to determine which events have the biggest effect on human health or largest economic impact, I have filtered for data set to only include records with the complete set of event data from 1996.
 
 ```{r filter_date, cache=TRUE}
 library(lubridate)
-data$YEAR <- year(mdy_hms(data$BGN_DATE)) 
-new_df <- data[data$YEAR > 1995,]
+data$year <- year(mdy_hms(data$BGN_DATE)) 
+data<- data[data$year > 1995,]
 ```
 
 #### Cleaning the event type names
@@ -46,78 +54,78 @@ The event names are not all coded in the same way, so I created a new variable, 
 * grepl was used to find the index of for all variations of a specific event type 
 * the index was used to replace all variations with the official name, as stated in the documentation.[https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf]
 
-```{r official_names, cache=TRUE}
-new_df$event <- tolower(new_df$EVTYPE)
+```{r official_names}
+data$event <- tolower(data$EVTYPE)
 
 official_event_names <- tolower(c("Astronomical Low Tide", "Avalanche,     Blizzard", "Coastal Flood","Cold/Wind Chill", "Debris Flow", "Dense Fog", "Dense Smoke", "Drought", "Dust Devil", "Dust Storm", "Excessive Heat", "Extreme Cold/Wind Chill", "Flash Flood", "Flood", "Frost/Freeze", "Funnel Cloud",  "Freezing Fog", "Hail", "Heat", "Heavy Rain", "Heavy Snow",  "High Surf", "High Wind", "Hurricane/Typhoon", "Ice Storm", "Lake-Effect-Snow", "Lakeshore Flood", "Lightning",  "Marine Hail", "Marine High Wind", "Marine Strong Wind", "Marine Thunderstorm Wind", "Rip Current", "Seiche", "Sleet",
  "Storm Surge/Tide", "Strong Wind", "Thunderstorm Wind", "Tornado", "Tropical Depression", "Tropical Storm",  "Tsunami", "Volcanic Ash", "Waterspout", "Wildfire",  "Winter Storm", "Winter Weather"))
 ```
 
-```{r find_index, cache=TRUE}
-a <- grepl("ashfall", new_df$event)
-c <- grepl("coastal flood", new_df$event)
-cf <- grepl("cstl flood", new_df$event)
-cd <- grepl("[Dd]ry", new_df$event)
-d <- grepl("[Cc]old", new_df$event)
-f <- grepl("flash", new_df$event)
-fz <- grepl("freeze", new_df$event)
-fr <- grepl("freezing rain", new_df$event)
-h <- grepl("hail", new_df$event)
-hr <- grepl("hurricane", new_df$event)
-l <- grepl("lake effect", new_df$event)
-rp <- grepl("record precipitation", new_df$event)
-rf <- grepl("rainfall", new_df$event)
-r <- grepl("rain", new_df$event)
-s <- grepl("snow", new_df$event)
-sg <- grepl("surge", new_df$event)
-sf <- grepl("surf", new_df$event)
-t <- grepl("typhoon", new_df$event)
-ts <- grepl("tstm", new_df$event)
-wc <- grepl("windchill", new_df$event)
+```{r find_index}
+a <- grepl("ashfall", data$event)
+c <- grepl("coastal flood", data$event)
+cf <- grepl("cstl flood", data$event)
+cd <- grepl("[Dd]ry", data$event)
+d <- grepl("[Cc]old", data$event)
+f <- grepl("flash", data$event)
+fz <- grepl("freeze", data$event)
+fr <- grepl("freezing rain", data$event)
+h <- grepl("hail", data$event)
+hr <- grepl("hurricane", data$event)
+l <- grepl("lake effect", data$event)
+rp <- grepl("record precipitation", data$event)
+rf <- grepl("rainfall", data$event)
+r <- grepl("rain", data$event)
+s <- grepl("snow", data$event)
+sg <- grepl("surge", data$event)
+sf <- grepl("surf", data$event)
+t <- grepl("typhoon", data$event)
+ts <- grepl("tstm", data$event)
+wc <- grepl("windchill", data$event)
 
 ```
 
-```{r replace_names, cache=TRUE}
+```{r replace_names}
 library(stringr)
-new_df$event[a == TRUE] <- "volcanic ash"
-new_df$event[c == TRUE | cf == TRUE] <- "coastal flood"
-new_df$event[c == TRUE | wc == TRUE] <- "extreme cold/wind chill"
-new_df$event[d== TRUE] <- "drought"
-new_df$event[f == TRUE] <- "flash flood"
-new_df$event[rf==TRUE | rp==TRUE | r==TRUE ] <- "heavy rain"
-new_df$event[fr == TRUE] <- "sleet"
-new_df$event[fz == TRUE] <- "frost/freeze"
-new_df$event[h == TRUE] <- "hail"
-new_df$event[l == TRUE] <- "lake-effect"
-new_df$event[sf == TRUE] <- "high surf"
-new_df$event[s == TRUE] <- "heavy snow"
-new_df$event[sg == TRUE] <- "storm surge/tide"
-new_df$event[t == TRUE | hr == TRUE] <- "hurricane/typhoon"
-new_df$event[ts == TRUE] <- "tsunami"
-new_df$event <- str_replace(new_df$event, "strong winds", "strong wind")
-new_df$event <- str_replace(new_df$event, "rip currents", "rip current")
-new_df$event <- str_replace_all(new_df$event, "high wind (g40)", "high wind")
-new_df$event <- str_replace_all(new_df$event, "dust devel", "dust devil")
-new_df$event <- str_replace_all(new_df$event, "ice fog", "freezing fog")
+data$event[a == TRUE] <- "volcanic ash"
+data$event[c == TRUE | cf == TRUE] <- "coastal flood"
+data$event[c == TRUE | wc == TRUE] <- "extreme cold/wind chill"
+data$event[d== TRUE] <- "drought"
+data$event[f == TRUE] <- "flash flood"
+data$event[rf==TRUE | rp==TRUE | r==TRUE ] <- "heavy rain"
+data$event[fr == TRUE] <- "sleet"
+data$event[fz == TRUE] <- "frost/freeze"
+data$event[h == TRUE] <- "hail"
+data$event[l == TRUE] <- "lake-effect"
+data$event[sf == TRUE] <- "high surf"
+data$event[s == TRUE] <- "heavy snow"
+data$event[sg == TRUE] <- "storm surge/tide"
+data$event[t == TRUE | hr == TRUE] <- "hurricane/typhoon"
+data$event[ts == TRUE] <- "tsunami"
+data$event <- str_replace(data$event, "strong winds", "strong wind")
+data$event <- str_replace(data$event, "rip currents", "rip current")
+data$event <- str_replace_all(data$event, "high wind (g40)", "high wind")
+data$event <- str_replace_all(data$event, "dust devel", "dust devil")
+data$event <- str_replace_all(data$event, "ice fog", "freezing fog")
 ```
 
-There are some event names that are are not clearly in one of the standarized event types.  I decided to delete this instances from the data base. I checked to see which events did not match the official list after the above standardization.  
+There are some event names that are are not clearly in one of the standarized event types.  I decided to delete these instances from the data base. I checked to see which events did not match the official list after the above standardization.  
 
-```{r check_names, cache=TRUE}
+```{r check_names}
 library(dplyr)
-bad_names <- setdiff(new_df$event, official_event_names)
-new_df <- filter(new_df, event %in% official_event_names)
+bad_names <- setdiff(data$event, official_event_names)
+data <- filter(data, event %in% official_event_names)
 ```
 
-Filter data set to exclude rows w/ either missing data for PROPDMGEXP or 
+#### Filter data set to exclude rows w/ either missing data for PROPDMGEXP or 
 CROPDMGEXP
 
-```{r filter_NA, cache=TRUE}
-econ_df <- new_df[new_df$CROPDMGEXP != "" | 
-                        new_df$PROPDMGEXP != "", ]
+```{r filter_NA}
+econ_df <- data[data$CROPDMGEXP != "" | 
+                        data$PROPDMGEXP != "", ]
 ```
 
-Function to adjust for different units in CROPDMGEXP and PROPDMGEXP
+* Function to adjust for different units in CROPDMGEXP and PROPDMGEXP
 
 ```{r transform}
 transform <- function (x, y) {
@@ -137,16 +145,21 @@ transform <- function (x, y) {
 }
 ```
 
-Use transform to adjust CROPDMGEXP and PROPDMGEXP
+* Use transform to adjust CROPDMGEXP and PROPDMGEXP
 
-```{r, units, cache=TRUE}
+```{r, units}
 econ_df$units_adj_cropdmg <- mapply(transform, 
                 econ_df$CROPDMGEXP, econ_df$CROPDMG)
 econ_df$units_adj_propdmg <- mapply(transform, 
                 econ_df$PROPDMGEXP, econ_df$PROPDMG)
 ```
 
-Find summary statistics by year for each event type.
+### Data Analysis
+
+#### We were asked to explore which weather event type causes the most economic damage? To answer this question, I first found the total property and crop damage for each event type.  I then found the top ten most destructive weather types.   
+
+* Find summary statistics by year for each event type.
+
 ```{r statistics, cache=TRUE}
 econ_damage <- econ_df %>% group_by(event) %>% 
                   summarize(total_property_damage = sum(units_adj_propdmg),
@@ -163,11 +176,11 @@ print(knit_table)
 
 #### Create plot of yearly economic damage by the top 5 most destructive weather event types.  
 
-* Create a new data set and subset to the top 5 most damaging weather types
+* Create a new data set and subset to the top 5 most damaging weather event types
 * Change event to a factor variable
-* Filter the data set to include only the top 5 most damaging weather types
-* Create a line plot 
-* The y axix is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger that it was necessary to change to a log scale.
+* Filter the data set to include only the top 5 most damaging weather event  types
+* Create a panel plot of the economic damage for the top 5 most damaging weather event types
+* The y axis is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger than the damage from other events that it was necessary to change to a log scale.
 
 ```{r Figure2}
 library(ggplot2)
@@ -176,7 +189,7 @@ top_damage <- filter(econ_damage, event %in% official_event_names) %>%
           arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(5)
 
 ##create new data frame to plot
-df <- econ_df %>% group_by(YEAR, event) %>% 
+df <- econ_df %>% group_by(year, event) %>% 
         summarize(total_property_damage = sum(units_adj_propdmg/10^6),
                   total_crop_damage = sum(units_adj_cropdmg/10^6)) 
 
@@ -185,7 +198,7 @@ plot$event <- as.factor(plot$event)
 
 m <- max(plot$total_property_damage)
 
-g <- ggplot(data=plot, aes(x=YEAR, y=log(total_property_damage)))
+g <- ggplot(data=plot, aes(x=year, y=log(total_property_damage)))
 g + geom_line(col="steelblue") +
         ggtitle("Total Property and Crop Damage, 1996-2011") +
         facet_grid(.~ event) + 
@@ -196,7 +209,7 @@ g + geom_line(col="steelblue") +
 ### Which weather type most impacts human health?
 
 ```{r health}
-health <- new_df %>% group_by(event) %>% 
+health <- data %>% group_by(event) %>% 
         summarize(total_fatalities = sum(FATALITIES),
                   total_injuries = sum(INJURIES) )
 
