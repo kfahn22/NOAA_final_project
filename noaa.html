@@ -395,8 +395,16 @@ data &lt;- read.csv(&quot;noaa.csv.bz2&quot;)</code></pre>
 <h3>Data Transformation</h3>
 <div id="check-out-data-and-delete-unnecessary-columns" class="section level4">
 <h4>Check out data and delete unnecessary columns</h4>
-<pre class="r"><code>library(dplyr)
-str(data)</code></pre>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>str(data)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    902297 obs. of  37 variables:
 ##  $ STATE__   : num  1 1 1 1 1 1 1 1 1 1 ...
 ##  $ BGN_DATE  : chr  &quot;4/18/1950 0:00:00&quot; &quot;4/18/1950 0:00:00&quot; &quot;2/20/1951 0:00:00&quot; &quot;6/8/1951 0:00:00&quot; ...
@@ -610,47 +618,148 @@ health_table &lt;- health %&gt;%
         arrange(desc(total_fatalities, total_injuries)) %&gt;% top_n(10)</code></pre>
 <pre><code>## Selecting by total_injuries</code></pre>
 <pre class="r"><code>library(xtable)
-x &lt;- xtable(health_table)
-x</code></pre>
-<pre><code>## % latex table generated in R 4.0.3 by xtable 1.8-4 package
-## % Sat Apr 17 12:22:35 2021
-## \begin{table}[ht]
-## \centering
-## \begin{tabular}{rlrr}
-##   \hline
-##  &amp; event &amp; total\_fatalities &amp; total\_injuries \\ 
-##   \hline
-## 1 &amp; excessive heat &amp; 1797.00 &amp; 6391.00 \\ 
-##   2 &amp; tornado &amp; 1511.00 &amp; 20667.00 \\ 
-##   3 &amp; flash flood &amp; 887.00 &amp; 1674.00 \\ 
-##   4 &amp; lightning &amp; 651.00 &amp; 4141.00 \\ 
-##   5 &amp; flood &amp; 414.00 &amp; 6758.00 \\ 
-##   6 &amp; tsunami &amp; 289.00 &amp; 3866.00 \\ 
-##   7 &amp; heat &amp; 237.00 &amp; 1222.00 \\ 
-##   8 &amp; winter storm &amp; 191.00 &amp; 1292.00 \\ 
-##   9 &amp; thunderstorm wind &amp; 130.00 &amp; 1400.00 \\ 
-##   10 &amp; hurricane/typhoon &amp; 125.00 &amp; 1328.00 \\ 
-##    \hline
-## \end{tabular}
-## \end{table}</code></pre>
-<pre class="r"><code>knit_health_table &lt;- kable(health_table, caption=&quot;Top Ten Weather types that most Impact Human Health&quot;)
-print(knit_health_table)</code></pre>
-<pre><code>## 
-## 
-## Table: Top Ten Weather types that most Impact Human Health
-## 
-## |event             | total_fatalities| total_injuries|
-## |:-----------------|----------------:|--------------:|
-## |excessive heat    |             1797|           6391|
-## |tornado           |             1511|          20667|
-## |flash flood       |              887|           1674|
-## |lightning         |              651|           4141|
-## |flood             |              414|           6758|
-## |tsunami           |              289|           3866|
-## |heat              |              237|           1222|
-## |winter storm      |              191|           1292|
-## |thunderstorm wind |              130|           1400|
-## |hurricane/typhoon |              125|           1328|</code></pre>
+xt &lt;- xtable(health_table, caption = &quot;\\tt Weather Types Ranked by Impact on Human Health&quot;, auto=TRUE)
+#print(xt, floating = TRUE, type=&quot;html&quot;, include.rownames = FALSE, size=
+ #       &quot;\\setlength{\\tabcolsep}{15pt}&quot;)
+print(xt, type=&quot;html&quot;, include.rownames = FALSE, booktabs=TRUE)</code></pre>
+<!-- html table generated in R 4.0.3 by xtable 1.8-4 package -->
+<!-- Sat Apr 17 13:56:07 2021 -->
+<table border="1">
+<caption align="bottom">
+Weather Types Ranked by Impact on Human Health
+</caption>
+<tr>
+<th>
+event
+</th>
+<th>
+total_fatalities
+</th>
+<th>
+total_injuries
+</th>
+</tr>
+<tr>
+<td>
+excessive heat
+</td>
+<td align="right">
+1797
+</td>
+<td align="right">
+6391
+</td>
+</tr>
+<tr>
+<td>
+tornado
+</td>
+<td align="right">
+1511
+</td>
+<td align="right">
+20667
+</td>
+</tr>
+<tr>
+<td>
+flash flood
+</td>
+<td align="right">
+887
+</td>
+<td align="right">
+1674
+</td>
+</tr>
+<tr>
+<td>
+lightning
+</td>
+<td align="right">
+651
+</td>
+<td align="right">
+4141
+</td>
+</tr>
+<tr>
+<td>
+flood
+</td>
+<td align="right">
+414
+</td>
+<td align="right">
+6758
+</td>
+</tr>
+<tr>
+<td>
+tsunami
+</td>
+<td align="right">
+289
+</td>
+<td align="right">
+3866
+</td>
+</tr>
+<tr>
+<td>
+heat
+</td>
+<td align="right">
+237
+</td>
+<td align="right">
+1222
+</td>
+</tr>
+<tr>
+<td>
+winter storm
+</td>
+<td align="right">
+191
+</td>
+<td align="right">
+1292
+</td>
+</tr>
+<tr>
+<td>
+thunderstorm wind
+</td>
+<td align="right">
+130
+</td>
+<td align="right">
+1400
+</td>
+</tr>
+<tr>
+<td>
+hurricane/typhoon
+</td>
+<td align="right">
+125
+</td>
+<td align="right">
+1328
+</td>
+</tr>
+</table>
+<pre class="r"><code>#align(xt) &lt;- &quot;|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|&quot;
+#align(xt) &lt;- rep(&quot;r&quot;, 4)</code></pre>
+<pre class="r"><code>library(xtable)
+xt2 &lt;- xtable(health_table, caption = &quot;\\tt Weather Types Ranked by Impact on Human Health&quot;)
+print(xt2, include.rownames = FALSE, size=
+        &quot;\\setlength{\\tabcolsep}{15pt}&quot;, floating = TRUE, latex.environments         = &quot;center&quot;)</code></pre>
+% latex table generated in R 4.0.3 by xtable 1.8-4 package % Sat Apr 17 13:56:07 2021
+
+<pre class="r"><code>#align(xt) &lt;- &quot;|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|&quot;
+#align(xt) &lt;- rep(&quot;r&quot;, 4)</code></pre>
 </div>
 </div>
 

@@ -36,6 +36,26 @@ data <- read.csv("noaa.csv.bz2")
 
 ```r
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 str(data)
 ```
 
@@ -321,55 +341,68 @@ health_table <- health %>%
 
 ```r
 library(xtable)
-x <- xtable(health_table)
-x
+xt <- xtable(health_table, caption = "\\tt Weather Types Ranked by Impact on Human Health", auto=TRUE)
+#print(xt, floating = TRUE, type="html", include.rownames = FALSE, size=
+ #       "\\setlength{\\tabcolsep}{15pt}")
+print(xt, type="html", include.rownames = FALSE, booktabs=TRUE)
 ```
 
-```
-## % latex table generated in R 4.0.3 by xtable 1.8-4 package
-## % Sat Apr 17 12:22:35 2021
-## \begin{table}[ht]
-## \centering
-## \begin{tabular}{rlrr}
-##   \hline
-##  & event & total\_fatalities & total\_injuries \\ 
-##   \hline
-## 1 & excessive heat & 1797.00 & 6391.00 \\ 
-##   2 & tornado & 1511.00 & 20667.00 \\ 
-##   3 & flash flood & 887.00 & 1674.00 \\ 
-##   4 & lightning & 651.00 & 4141.00 \\ 
-##   5 & flood & 414.00 & 6758.00 \\ 
-##   6 & tsunami & 289.00 & 3866.00 \\ 
-##   7 & heat & 237.00 & 1222.00 \\ 
-##   8 & winter storm & 191.00 & 1292.00 \\ 
-##   9 & thunderstorm wind & 130.00 & 1400.00 \\ 
-##   10 & hurricane/typhoon & 125.00 & 1328.00 \\ 
-##    \hline
-## \end{tabular}
-## \end{table}
+<!-- html table generated in R 4.0.3 by xtable 1.8-4 package -->
+<!-- Sat Apr 17 13:56:07 2021 -->
+<table border=1>
+<caption align="bottom"> \tt Weather Types Ranked by Impact on Human Health </caption>
+<tr> <th> event </th> <th> total_fatalities </th> <th> total_injuries </th>  </tr>
+ <tr> <td> excessive heat </td> <td align="right"> 1797 </td> <td align="right"> 6391 </td> </tr>
+  <tr> <td> tornado </td> <td align="right"> 1511 </td> <td align="right"> 20667 </td> </tr>
+  <tr> <td> flash flood </td> <td align="right"> 887 </td> <td align="right"> 1674 </td> </tr>
+  <tr> <td> lightning </td> <td align="right"> 651 </td> <td align="right"> 4141 </td> </tr>
+  <tr> <td> flood </td> <td align="right"> 414 </td> <td align="right"> 6758 </td> </tr>
+  <tr> <td> tsunami </td> <td align="right"> 289 </td> <td align="right"> 3866 </td> </tr>
+  <tr> <td> heat </td> <td align="right"> 237 </td> <td align="right"> 1222 </td> </tr>
+  <tr> <td> winter storm </td> <td align="right"> 191 </td> <td align="right"> 1292 </td> </tr>
+  <tr> <td> thunderstorm wind </td> <td align="right"> 130 </td> <td align="right"> 1400 </td> </tr>
+  <tr> <td> hurricane/typhoon </td> <td align="right"> 125 </td> <td align="right"> 1328 </td> </tr>
+  </table>
+
+```r
+#align(xt) <- "|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|"
+#align(xt) <- rep("r", 4)
 ```
 
 
 ```r
-knit_health_table <- kable(health_table, caption="Top Ten Weather types that most Impact Human Health")
-print(knit_health_table)
+library(xtable)
+xt2 <- xtable(health_table, caption = "\\tt Weather Types Ranked by Impact on Human Health")
+print(xt2, include.rownames = FALSE, size=
+        "\\setlength{\\tabcolsep}{15pt}", floating = TRUE, latex.environments         = "center")
 ```
 
-```
-## 
-## 
-## Table: Top Ten Weather types that most Impact Human Health
-## 
-## |event             | total_fatalities| total_injuries|
-## |:-----------------|----------------:|--------------:|
-## |excessive heat    |             1797|           6391|
-## |tornado           |             1511|          20667|
-## |flash flood       |              887|           1674|
-## |lightning         |              651|           4141|
-## |flood             |              414|           6758|
-## |tsunami           |              289|           3866|
-## |heat              |              237|           1222|
-## |winter storm      |              191|           1292|
-## |thunderstorm wind |              130|           1400|
-## |hurricane/typhoon |              125|           1328|
+% latex table generated in R 4.0.3 by xtable 1.8-4 package
+% Sat Apr 17 13:56:07 2021
+\begin{table}[ht]
+\centering
+\begingroup\setlength{\tabcolsep}{15pt}
+\begin{tabular}{lrr}
+  \hline
+event & total\_fatalities & total\_injuries \\ 
+  \hline
+excessive heat & 1797.00 & 6391.00 \\ 
+  tornado & 1511.00 & 20667.00 \\ 
+  flash flood & 887.00 & 1674.00 \\ 
+  lightning & 651.00 & 4141.00 \\ 
+  flood & 414.00 & 6758.00 \\ 
+  tsunami & 289.00 & 3866.00 \\ 
+  heat & 237.00 & 1222.00 \\ 
+  winter storm & 191.00 & 1292.00 \\ 
+  thunderstorm wind & 130.00 & 1400.00 \\ 
+  hurricane/typhoon & 125.00 & 1328.00 \\ 
+   \hline
+\end{tabular}
+\endgroup
+\caption{\tt Weather Types Ranked by Impact on Human Health} 
+\end{table}
+
+```r
+#align(xt) <- "|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|"
+#align(xt) <- rep("r", 4)
 ```

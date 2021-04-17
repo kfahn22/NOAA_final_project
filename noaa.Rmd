@@ -220,13 +220,23 @@ health_table <- health %>%
         arrange(desc(total_fatalities, total_injuries)) %>% top_n(10)
 ```
 
-```{r xtable}
+```{r showtable, results="asis"}
 library(xtable)
-x <- xtable(health_table)
-x
+xt <- xtable(health_table, caption = "\\tt Weather Types Ranked by Impact on Human Health", auto=TRUE)
+#print(xt, floating = TRUE, type="html", include.rownames = FALSE, size=
+ #       "\\setlength{\\tabcolsep}{15pt}")
+print(xt, type="html", include.rownames = FALSE, booktabs=TRUE)
+#align(xt) <- "|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|"
+#align(xt) <- rep("r", 4)
+
 ```
 
-```{r Figure 3}
-knit_health_table <- kable(health_table, caption="Top Ten Weather types that most Impact Human Health")
-print(knit_health_table)
+```{r try2, results="asis"}
+library(xtable)
+xt2 <- xtable(health_table, caption = "\\tt Weather Types Ranked by Impact on Human Health")
+print(xt2, include.rownames = FALSE, size=
+        "\\setlength{\\tabcolsep}{15pt}", floating = TRUE, latex.environments         = "center")
+#align(xt) <- "|lp{1cm}|lp{1cm}|lp{1cm}|lp{1cm}|"
+#align(xt) <- rep("r", 4)
+
 ```
