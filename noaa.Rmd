@@ -11,14 +11,16 @@ output:
 
 ## Synopsis
 
-It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  (add more detail here)  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way.  This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  Other the other hand, tornados lead to a greater number of injuries, perhaps due to air-born debrie.   
+This It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way. This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  While excessive heat causes the most deaths, tornados lead to a greater number of toal injuries and deaths.   
 
 Does the document have a synopsis that describes and summarizes the data analysis in less than 10 sentences?
 
 
 ##  Data Processing
 
-Thanks to Mentor Usama Khalil's useful post on cleaning the storm data. [https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  and this guide to handling the coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
+Thanks to Mentor Usama Khalil's useful post on cleaning the storm data.
+[1]
+[https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  and this guide to handling the coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
 
 
 ```{r cache=TRUE}
@@ -28,7 +30,7 @@ download.file(fileUrl, destfile = "noaa.csv.bz2", method="curl")
 data <- read.csv("noaa.csv.bz2")
 ```
 
-### Data Transformation
+### I.  Data Transformation
 
 #### Check out data and delete unnecessary columns
 
@@ -156,25 +158,28 @@ econ_df$units_adj_propdmg <- mapply(transform,
                 econ_df$PROPDMGEXP, econ_df$PROPDMG)
 ```
 
-### Data Analysis
+### II.  Data Analysis
 
-#### We were asked to explore which weather event type causes the most economic damage? To answer this question, I first found the total property and crop damage for each event type.  I then found the top ten most destructive weather types.   
+#### A.  Economic Impact of Storms by Event Type
 
-* Find summary statistics by year for each event type.
+We were asked to explore which weather event type causes the most economic damage. To answer this question, I first found the total property and crop damage for each event type.  I then found the top ten most destructive weather types.   
+
+* Find total property and crop damage by year for each event type and rank to find the 10 most expensive types.
 
 ```{r statistics, cache=TRUE}
 econ_damage <- econ_df %>% group_by(event) %>% 
-                  summarize(total_property_damage =                                             sprintf("%.2f",sum(units_adj_propdmg)/10^6),
-                  total_crop_damage = sprintf("%.2f", sum(units_adj_cropdmg)/10^6) )
+                  summarize(total_property_damage =                                             sprintf("%.0f",sum(units_adj_propdmg)/10^6),
+                  total_crop_damage = sprintf("%.0f",   sum(units_adj_cropdmg)/10^6) )
+
 table <- econ_damage %>% arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(10)
 ```
 
-```{r fig1, results = "asis"}
+```{r table1, results = "asis"}
 library(gt)
 gt_tbl <- gt(table)
 gt_tbl <- gt_tbl %>%
  tab_header(
-    title = "Top Ten Most Costly Weather Types, by Property and Crop Damage",
+    title = "Top Ten Most Costly Weather Types, by Property and Crop Damage,              1996-2001",
     subtitle = "Millions of Dollars"
 ) 
 gt_tbl <- gt_tbl %>%
@@ -187,6 +192,7 @@ gt_tbl <- gt_tbl %>% cols_label(
   total_crop_damage = "Total Crop Damage"
 )
 gt_tbl <- opt_row_striping(gt_tbl, row_striping = TRUE)
+gt_tbl <- opt_table_outline(gt_tbl)
 gt_tbl
 ```
 
@@ -198,8 +204,7 @@ gt_tbl
 * Create a panel plot of the economic damage for the top 5 most damaging weather event types
 * The y axis is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger than the damage from other events that it was necessary to change to a log scale.
 
-```{r fig2}
-library(ggplot2)
+```{r plot_df}
 library(dplyr)
 top_damage <- filter(econ_damage, event %in% official_event_names) %>%
           arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(5)
@@ -212,17 +217,31 @@ df <- econ_df %>% group_by(year, event) %>%
 plot <- filter(df, event %in% top_damage$event)
 plot$event <- as.factor(plot$event)
 
-m <- max(plot$total_property_damage)
-
-g <- ggplot(data=plot, aes(x=year, y=log(total_property_damage)))
-g + geom_line(col="steelblue") +
-        ggtitle("Total Property and Crop Damage, 1996-2011") +
-        facet_grid(.~ event) + 
-        coord_cartesian(ylim=c(0, log(m))) +
-        labs(y="Total cost in log(Millions of dollars)")
+str(plot)
 ```
 
-### Which Weather Type Most Impacts Human Health?
+```{r fig1, fig.width=10, fig.height=8}
+
+library(ggplot2)
+m <- max(plot$total_property_damage)
+p <- ggplot(data=plot, aes(year)) +
+  geom_line(aes(y=log(total_property_damage), 
+                colour="total_property_damage")) +                geom_line(aes(y=log(total_crop_damage),                                                       colour = "total_crop_damage")) +
+        labs(y="total cost", 
+        title="Total Property and Crop Damage, 1996-2011", 
+        subtitle=("log(Millions of US Dollars)"), 
+        caption = "Figure 1") +
+        facet_grid(.~ event) + 
+        coord_cartesian(ylim=c(0, log(m))) 
+        
+print(p)
+```
+
+### B.  Human Impact of Weather Events 
+
+We were asked to explore which weather event type causes the most harm to human health. To answer this question, I first found the total number of fatalities and injries for each event type.  I then found the top ten most injurious weather types.   
+
+* Find total fatalities and injuries damage by year for each event type and rank to find the 10 most expensive types.
 
 ```{r health}
 health <- data %>% group_by(event) %>% 
@@ -235,15 +254,44 @@ health_table <- health %>%
 ```
 
 
-```{r fig3, results = "asis"}
+```{r table2, results = "asis"}
 library(gt)
 ht_tbl <- gt(health_table)
 ht_tbl <- ht_tbl %>%
  tab_header(
     title = "Weather Types Ranked by Impact on Human Health",
+    subtitle = "1996-2001"
+    ) 
+ht_tbl <- ht_tbl %>%
+  tab_source_note(
+  source_note = "Source:  NOAA Storm Data"
 ) 
-
+ht_tbl <- ht_tbl %>% cols_label(
+  event = "Event",
+  total_fatalities = "Total Fatalities",
+  total_injuries = "Total Injuries"
+)
+ht_tbl <- opt_row_striping(ht_tbl, row_striping = TRUE)
+ht_tbl <- opt_table_outline(ht_tbl)
 ht_tbl
 ```
 
+*  Create a new data frame to plot health effects by storm type
+
+```{r fig2}
+
+health_df <- data %>% group_by(year, event) %>% 
+        summarize(total_fatalities = sum(FATALITIES),
+                  total_injuries = sum(INJURIES))  %>% 
+        arrange(desc(total_fatalities, total_injuries)) %>% top_n(5)
+
+m <- max(health_df$total_fatalities)
+
+g <- ggplot(data=health_df, aes(x=year, y=total_fatalities))
+g + geom_line(col="red") +
+        ggtitle("Total Fatalities, 1996-2011") +
+        facet_grid(.~ event) + 
+        coord_cartesian(ylim=c(0, log(m))) +
+        labs(y="Total Fatalities")
+```
 

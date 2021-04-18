@@ -11,14 +11,16 @@ output:
 
 ## Synopsis
 
-It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  (add more detail here)  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way.  This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  Other the other hand, tornados lead to a greater number of injuries, perhaps due to air-born debrie.   
+This It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way. This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  While excessive heat causes the most deaths, tornados lead to a greater number of toal injuries and deaths.   
 
 Does the document have a synopsis that describes and summarizes the data analysis in less than 10 sentences?
 
 
 ##  Data Processing
 
-Thanks to Mentor Usama Khalil's useful post on cleaning the storm data. [https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  and this guide to handling the coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
+Thanks to Mentor Usama Khalil's useful post on cleaning the storm data.
+[1]
+[https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  and this guide to handling the coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
 
 
 
@@ -29,7 +31,7 @@ download.file(fileUrl, destfile = "noaa.csv.bz2", method="curl")
 data <- read.csv("noaa.csv.bz2")
 ```
 
-### Data Transformation
+### I.  Data Transformation
 
 #### Check out data and delete unnecessary columns
 
@@ -229,17 +231,20 @@ econ_df$units_adj_propdmg <- mapply(transform,
                 econ_df$PROPDMGEXP, econ_df$PROPDMG)
 ```
 
-### Data Analysis
+### II.  Data Analysis
 
-#### We were asked to explore which weather event type causes the most economic damage? To answer this question, I first found the total property and crop damage for each event type.  I then found the top ten most destructive weather types.   
+#### A.  Economic Impact of Storms by Event Type
 
-* Find summary statistics by year for each event type.
+We were asked to explore which weather event type causes the most economic damage. To answer this question, I first found the total property and crop damage for each event type.  I then found the top ten most destructive weather types.   
+
+* Find total property and crop damage by year for each event type and rank to find the 10 most expensive types.
 
 
 ```r
 econ_damage <- econ_df %>% group_by(event) %>% 
-                  summarize(total_property_damage =                                             sprintf("%.2f",sum(units_adj_propdmg)/10^6),
-                  total_crop_damage = sprintf("%.2f", sum(units_adj_cropdmg)/10^6) )
+                  summarize(total_property_damage =                                             sprintf("%.0f",sum(units_adj_propdmg)/10^6),
+                  total_crop_damage = sprintf("%.0f",   sum(units_adj_cropdmg)/10^6) )
+
 table <- econ_damage %>% arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(10)
 ```
 
@@ -253,7 +258,7 @@ library(gt)
 gt_tbl <- gt(table)
 gt_tbl <- gt_tbl %>%
  tab_header(
-    title = "Top Ten Most Costly Weather Types, by Property and Crop Damage",
+    title = "Top Ten Most Costly Weather Types, by Property and Crop Damage,              1996-2001",
     subtitle = "Millions of Dollars"
 ) 
 gt_tbl <- gt_tbl %>%
@@ -266,6 +271,7 @@ gt_tbl <- gt_tbl %>% cols_label(
   total_crop_damage = "Total Crop Damage"
 )
 gt_tbl <- opt_row_striping(gt_tbl, row_striping = TRUE)
+gt_tbl <- opt_table_outline(gt_tbl)
 gt_tbl
 ```
 
@@ -274,7 +280,7 @@ gt_tbl
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#acqvnemcfw .gt_table {
+#dnsbjbsyzc .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -286,20 +292,20 @@ gt_tbl
   background-color: #FFFFFF;
   width: auto;
   border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #A8A8A8;
-  border-right-style: none;
-  border-right-width: 2px;
+  border-top-width: 3px;
+  border-top-color: #D3D3D3;
+  border-right-style: solid;
+  border-right-width: 3px;
   border-right-color: #D3D3D3;
   border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #A8A8A8;
-  border-left-style: none;
-  border-left-width: 2px;
+  border-bottom-width: 3px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: solid;
+  border-left-width: 3px;
   border-left-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_heading {
+#dnsbjbsyzc .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -311,7 +317,7 @@ gt_tbl
   border-right-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_title {
+#dnsbjbsyzc .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -321,7 +327,7 @@ gt_tbl
   border-bottom-width: 0;
 }
 
-#acqvnemcfw .gt_subtitle {
+#dnsbjbsyzc .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -331,13 +337,13 @@ gt_tbl
   border-top-width: 0;
 }
 
-#acqvnemcfw .gt_bottom_border {
+#dnsbjbsyzc .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_col_headings {
+#dnsbjbsyzc .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -352,7 +358,7 @@ gt_tbl
   border-right-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_col_heading {
+#dnsbjbsyzc .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -372,7 +378,7 @@ gt_tbl
   overflow-x: hidden;
 }
 
-#acqvnemcfw .gt_column_spanner_outer {
+#dnsbjbsyzc .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -384,15 +390,15 @@ gt_tbl
   padding-right: 4px;
 }
 
-#acqvnemcfw .gt_column_spanner_outer:first-child {
+#dnsbjbsyzc .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#acqvnemcfw .gt_column_spanner_outer:last-child {
+#dnsbjbsyzc .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#acqvnemcfw .gt_column_spanner {
+#dnsbjbsyzc .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -404,7 +410,7 @@ gt_tbl
   width: 100%;
 }
 
-#acqvnemcfw .gt_group_heading {
+#dnsbjbsyzc .gt_group_heading {
   padding: 8px;
   color: #333333;
   background-color: #FFFFFF;
@@ -426,7 +432,7 @@ gt_tbl
   vertical-align: middle;
 }
 
-#acqvnemcfw .gt_empty_group_heading {
+#dnsbjbsyzc .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -441,15 +447,15 @@ gt_tbl
   vertical-align: middle;
 }
 
-#acqvnemcfw .gt_from_md > :first-child {
+#dnsbjbsyzc .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#acqvnemcfw .gt_from_md > :last-child {
+#dnsbjbsyzc .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#acqvnemcfw .gt_row {
+#dnsbjbsyzc .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -468,7 +474,7 @@ gt_tbl
   overflow-x: hidden;
 }
 
-#acqvnemcfw .gt_stub {
+#dnsbjbsyzc .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -480,7 +486,7 @@ gt_tbl
   padding-left: 12px;
 }
 
-#acqvnemcfw .gt_summary_row {
+#dnsbjbsyzc .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -490,7 +496,7 @@ gt_tbl
   padding-right: 5px;
 }
 
-#acqvnemcfw .gt_first_summary_row {
+#dnsbjbsyzc .gt_first_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -500,7 +506,7 @@ gt_tbl
   border-top-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_grand_summary_row {
+#dnsbjbsyzc .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -510,7 +516,7 @@ gt_tbl
   padding-right: 5px;
 }
 
-#acqvnemcfw .gt_first_grand_summary_row {
+#dnsbjbsyzc .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -520,11 +526,11 @@ gt_tbl
   border-top-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_striped {
+#dnsbjbsyzc .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#acqvnemcfw .gt_table_body {
+#dnsbjbsyzc .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -533,7 +539,7 @@ gt_tbl
   border-bottom-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_footnotes {
+#dnsbjbsyzc .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -547,13 +553,13 @@ gt_tbl
   border-right-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_footnote {
+#dnsbjbsyzc .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding: 4px;
 }
 
-#acqvnemcfw .gt_sourcenotes {
+#dnsbjbsyzc .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -567,49 +573,49 @@ gt_tbl
   border-right-color: #D3D3D3;
 }
 
-#acqvnemcfw .gt_sourcenote {
+#dnsbjbsyzc .gt_sourcenote {
   font-size: 90%;
   padding: 4px;
 }
 
-#acqvnemcfw .gt_left {
+#dnsbjbsyzc .gt_left {
   text-align: left;
 }
 
-#acqvnemcfw .gt_center {
+#dnsbjbsyzc .gt_center {
   text-align: center;
 }
 
-#acqvnemcfw .gt_right {
+#dnsbjbsyzc .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#acqvnemcfw .gt_font_normal {
+#dnsbjbsyzc .gt_font_normal {
   font-weight: normal;
 }
 
-#acqvnemcfw .gt_font_bold {
+#dnsbjbsyzc .gt_font_bold {
   font-weight: bold;
 }
 
-#acqvnemcfw .gt_font_italic {
+#dnsbjbsyzc .gt_font_italic {
   font-style: italic;
 }
 
-#acqvnemcfw .gt_super {
+#dnsbjbsyzc .gt_super {
   font-size: 65%;
 }
 
-#acqvnemcfw .gt_footnote_marks {
+#dnsbjbsyzc .gt_footnote_marks {
   font-style: italic;
   font-size: 65%;
 }
 </style>
-<div id="acqvnemcfw" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+<div id="dnsbjbsyzc" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
   <thead class="gt_header">
     <tr>
-      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Top Ten Most Costly Weather Types, by Property and Crop Damage</th>
+      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Top Ten Most Costly Weather Types, by Property and Crop Damage,              1996-2001</th>
     </tr>
     <tr>
       <th colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Millions of Dollars</th>
@@ -625,53 +631,53 @@ gt_tbl
   <tbody class="gt_table_body">
     <tr>
       <td class="gt_row gt_left">hurricane/typhoon</td>
-      <td class="gt_row gt_left">81718.89</td>
-      <td class="gt_row gt_left">5350.11</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left gt_striped">tropical storm</td>
-      <td class="gt_row gt_left gt_striped">7642.48</td>
-      <td class="gt_row gt_left gt_striped">677.71</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left">lightning</td>
-      <td class="gt_row gt_left">743.08</td>
-      <td class="gt_row gt_left">6.90</td>
+      <td class="gt_row gt_left">81719</td>
+      <td class="gt_row gt_left">5350</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_striped">excessive heat</td>
-      <td class="gt_row gt_left gt_striped">7.72</td>
-      <td class="gt_row gt_left gt_striped">492.40</td>
+      <td class="gt_row gt_left gt_striped">8</td>
+      <td class="gt_row gt_left gt_striped">492</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">tropical storm</td>
+      <td class="gt_row gt_left">7642</td>
+      <td class="gt_row gt_left">678</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_striped">lightning</td>
+      <td class="gt_row gt_left gt_striped">743</td>
+      <td class="gt_row gt_left gt_striped">7</td>
     </tr>
     <tr>
       <td class="gt_row gt_left">heavy snow</td>
-      <td class="gt_row gt_left">681.99</td>
-      <td class="gt_row gt_left">71.12</td>
+      <td class="gt_row gt_left">682</td>
+      <td class="gt_row gt_left">71</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_striped">heavy rain</td>
-      <td class="gt_row gt_left gt_striped">585.17</td>
-      <td class="gt_row gt_left gt_striped">738.42</td>
+      <td class="gt_row gt_left gt_striped">585</td>
+      <td class="gt_row gt_left gt_striped">738</td>
     </tr>
     <tr>
       <td class="gt_row gt_left">high wind</td>
-      <td class="gt_row gt_left">5247.86</td>
-      <td class="gt_row gt_left">633.56</td>
+      <td class="gt_row gt_left">5248</td>
+      <td class="gt_row gt_left">634</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_striped">tsunami</td>
-      <td class="gt_row gt_left gt_striped">4680.42</td>
-      <td class="gt_row gt_left gt_striped">618.63</td>
+      <td class="gt_row gt_left gt_striped">4680</td>
+      <td class="gt_row gt_left gt_striped">619</td>
     </tr>
     <tr>
       <td class="gt_row gt_left">strong wind</td>
-      <td class="gt_row gt_left">176.99</td>
-      <td class="gt_row gt_left">64.95</td>
+      <td class="gt_row gt_left">177</td>
+      <td class="gt_row gt_left">65</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_striped">flood</td>
-      <td class="gt_row gt_left gt_striped">143944.83</td>
-      <td class="gt_row gt_left gt_striped">4974.78</td>
+      <td class="gt_row gt_left gt_striped">143945</td>
+      <td class="gt_row gt_left gt_striped">4975</td>
     </tr>
   </tbody>
   <tfoot class="gt_sourcenotes">
@@ -693,7 +699,6 @@ gt_tbl
 
 
 ```r
-library(ggplot2)
 library(dplyr)
 top_damage <- filter(econ_damage, event %in% official_event_names) %>%
           arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(5)
@@ -718,19 +723,62 @@ df <- econ_df %>% group_by(year, event) %>%
 plot <- filter(df, event %in% top_damage$event)
 plot$event <- as.factor(plot$event)
 
-m <- max(plot$total_property_damage)
-
-g <- ggplot(data=plot, aes(x=year, y=log(total_property_damage)))
-g + geom_line(col="steelblue") +
-        ggtitle("Total Property and Crop Damage, 1996-2011") +
-        facet_grid(.~ event) + 
-        coord_cartesian(ylim=c(0, log(m))) +
-        labs(y="Total cost in log(Millions of dollars)")
+str(plot)
 ```
 
-![](noaa_files/figure-html/fig2-1.png)<!-- -->
+```
+## tibble [80 × 4] (S3: grouped_df/tbl_df/tbl/data.frame)
+##  $ year                 : num [1:80] 1996 1996 1996 1996 1996 ...
+##  $ event                : Factor w/ 5 levels "heavy rain","heavy snow",..: 1 2 3 4 5 1 2 3 4 5 ...
+##  $ total_property_damage: num [1:80] 34.605 133.818 34.403 0.256 46.3 ...
+##  $ total_crop_damage    : num [1:80] 0.004 0.22 0.0518 0 1 ...
+##  - attr(*, "groups")= tibble [16 × 2] (S3: tbl_df/tbl/data.frame)
+##   ..$ year : num [1:16] 1996 1997 1998 1999 2000 ...
+##   ..$ .rows: list<int> [1:16] 
+##   .. ..$ : int [1:5] 1 2 3 4 5
+##   .. ..$ : int [1:5] 6 7 8 9 10
+##   .. ..$ : int [1:5] 11 12 13 14 15
+##   .. ..$ : int [1:5] 16 17 18 19 20
+##   .. ..$ : int [1:5] 21 22 23 24 25
+##   .. ..$ : int [1:5] 26 27 28 29 30
+##   .. ..$ : int [1:5] 31 32 33 34 35
+##   .. ..$ : int [1:5] 36 37 38 39 40
+##   .. ..$ : int [1:5] 41 42 43 44 45
+##   .. ..$ : int [1:5] 46 47 48 49 50
+##   .. ..$ : int [1:5] 51 52 53 54 55
+##   .. ..$ : int [1:5] 56 57 58 59 60
+##   .. ..$ : int [1:5] 61 62 63 64 65
+##   .. ..$ : int [1:5] 66 67 68 69 70
+##   .. ..$ : int [1:5] 71 72 73 74 75
+##   .. ..$ : int [1:5] 76 77 78 79 80
+##   .. ..@ ptype: int(0) 
+##   ..- attr(*, ".drop")= logi TRUE
+```
 
-### Which Weather Type Most Impacts Human Health?
+
+```r
+library(ggplot2)
+m <- max(plot$total_property_damage)
+p <- ggplot(data=plot, aes(year)) +
+  geom_line(aes(y=log(total_property_damage), 
+                colour="total_property_damage")) +                geom_line(aes(y=log(total_crop_damage),                                                       colour = "total_crop_damage")) +
+        labs(y="total cost", 
+        title="Total Property and Crop Damage, 1996-2011", 
+        subtitle=("log(Millions of US Dollars)"), 
+        caption = "Figure 1") +
+        facet_grid(.~ event) + 
+        coord_cartesian(ylim=c(0, log(m))) 
+        
+print(p)
+```
+
+![](noaa_files/figure-html/fig1-1.png)<!-- -->
+
+### B.  Human Impact of Weather Events 
+
+We were asked to explore which weather event type causes the most harm to human health. To answer this question, I first found the total number of fatalities and injries for each event type.  I then found the top ten most injurious weather types.   
+
+* Find total fatalities and injuries damage by year for each event type and rank to find the 10 most expensive types.
 
 
 ```r
@@ -755,8 +803,19 @@ ht_tbl <- gt(health_table)
 ht_tbl <- ht_tbl %>%
  tab_header(
     title = "Weather Types Ranked by Impact on Human Health",
+    subtitle = "1996-2001"
+    ) 
+ht_tbl <- ht_tbl %>%
+  tab_source_note(
+  source_note = "Source:  NOAA Storm Data"
 ) 
-
+ht_tbl <- ht_tbl %>% cols_label(
+  event = "Event",
+  total_fatalities = "Total Fatalities",
+  total_injuries = "Total Injuries"
+)
+ht_tbl <- opt_row_striping(ht_tbl, row_striping = TRUE)
+ht_tbl <- opt_table_outline(ht_tbl)
 ht_tbl
 ```
 
@@ -765,7 +824,7 @@ ht_tbl
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#uyzhcseeku .gt_table {
+#axyyypygpy .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -777,20 +836,20 @@ ht_tbl
   background-color: #FFFFFF;
   width: auto;
   border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #A8A8A8;
-  border-right-style: none;
-  border-right-width: 2px;
+  border-top-width: 3px;
+  border-top-color: #D3D3D3;
+  border-right-style: solid;
+  border-right-width: 3px;
   border-right-color: #D3D3D3;
   border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #A8A8A8;
-  border-left-style: none;
-  border-left-width: 2px;
+  border-bottom-width: 3px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: solid;
+  border-left-width: 3px;
   border-left-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_heading {
+#axyyypygpy .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -802,7 +861,7 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_title {
+#axyyypygpy .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -812,7 +871,7 @@ ht_tbl
   border-bottom-width: 0;
 }
 
-#uyzhcseeku .gt_subtitle {
+#axyyypygpy .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -822,13 +881,13 @@ ht_tbl
   border-top-width: 0;
 }
 
-#uyzhcseeku .gt_bottom_border {
+#axyyypygpy .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_col_headings {
+#axyyypygpy .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -843,7 +902,7 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_col_heading {
+#axyyypygpy .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -863,7 +922,7 @@ ht_tbl
   overflow-x: hidden;
 }
 
-#uyzhcseeku .gt_column_spanner_outer {
+#axyyypygpy .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -875,15 +934,15 @@ ht_tbl
   padding-right: 4px;
 }
 
-#uyzhcseeku .gt_column_spanner_outer:first-child {
+#axyyypygpy .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#uyzhcseeku .gt_column_spanner_outer:last-child {
+#axyyypygpy .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#uyzhcseeku .gt_column_spanner {
+#axyyypygpy .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -895,7 +954,7 @@ ht_tbl
   width: 100%;
 }
 
-#uyzhcseeku .gt_group_heading {
+#axyyypygpy .gt_group_heading {
   padding: 8px;
   color: #333333;
   background-color: #FFFFFF;
@@ -917,7 +976,7 @@ ht_tbl
   vertical-align: middle;
 }
 
-#uyzhcseeku .gt_empty_group_heading {
+#axyyypygpy .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -932,15 +991,15 @@ ht_tbl
   vertical-align: middle;
 }
 
-#uyzhcseeku .gt_from_md > :first-child {
+#axyyypygpy .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#uyzhcseeku .gt_from_md > :last-child {
+#axyyypygpy .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#uyzhcseeku .gt_row {
+#axyyypygpy .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -959,7 +1018,7 @@ ht_tbl
   overflow-x: hidden;
 }
 
-#uyzhcseeku .gt_stub {
+#axyyypygpy .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -971,7 +1030,7 @@ ht_tbl
   padding-left: 12px;
 }
 
-#uyzhcseeku .gt_summary_row {
+#axyyypygpy .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -981,7 +1040,7 @@ ht_tbl
   padding-right: 5px;
 }
 
-#uyzhcseeku .gt_first_summary_row {
+#axyyypygpy .gt_first_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -991,7 +1050,7 @@ ht_tbl
   border-top-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_grand_summary_row {
+#axyyypygpy .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1001,7 +1060,7 @@ ht_tbl
   padding-right: 5px;
 }
 
-#uyzhcseeku .gt_first_grand_summary_row {
+#axyyypygpy .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1011,11 +1070,11 @@ ht_tbl
   border-top-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_striped {
+#axyyypygpy .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#uyzhcseeku .gt_table_body {
+#axyyypygpy .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1024,7 +1083,7 @@ ht_tbl
   border-bottom-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_footnotes {
+#axyyypygpy .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1038,13 +1097,13 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_footnote {
+#axyyypygpy .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding: 4px;
 }
 
-#uyzhcseeku .gt_sourcenotes {
+#axyyypygpy .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1058,59 +1117,59 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#uyzhcseeku .gt_sourcenote {
+#axyyypygpy .gt_sourcenote {
   font-size: 90%;
   padding: 4px;
 }
 
-#uyzhcseeku .gt_left {
+#axyyypygpy .gt_left {
   text-align: left;
 }
 
-#uyzhcseeku .gt_center {
+#axyyypygpy .gt_center {
   text-align: center;
 }
 
-#uyzhcseeku .gt_right {
+#axyyypygpy .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#uyzhcseeku .gt_font_normal {
+#axyyypygpy .gt_font_normal {
   font-weight: normal;
 }
 
-#uyzhcseeku .gt_font_bold {
+#axyyypygpy .gt_font_bold {
   font-weight: bold;
 }
 
-#uyzhcseeku .gt_font_italic {
+#axyyypygpy .gt_font_italic {
   font-style: italic;
 }
 
-#uyzhcseeku .gt_super {
+#axyyypygpy .gt_super {
   font-size: 65%;
 }
 
-#uyzhcseeku .gt_footnote_marks {
+#axyyypygpy .gt_footnote_marks {
   font-style: italic;
   font-size: 65%;
 }
 </style>
-<div id="uyzhcseeku" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+<div id="axyyypygpy" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
   <thead class="gt_header">
     <tr>
       <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Weather Types Ranked by Impact on Human Health</th>
     </tr>
     <tr>
-      <th colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style></th>
+      <th colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>1996-2001</th>
     </tr>
   </thead>
   <thead class="gt_col_headings">
     <tr>
-      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">event</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">total_fatalities</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">total_injuries</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Event</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">Total Fatalities</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">Total Injuries</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
@@ -1120,9 +1179,9 @@ ht_tbl
       <td class="gt_row gt_right">6391</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">tornado</td>
-      <td class="gt_row gt_right">1511</td>
-      <td class="gt_row gt_right">20667</td>
+      <td class="gt_row gt_left gt_striped">tornado</td>
+      <td class="gt_row gt_right gt_striped">1511</td>
+      <td class="gt_row gt_right gt_striped">20667</td>
     </tr>
     <tr>
       <td class="gt_row gt_left">flash flood</td>
@@ -1130,9 +1189,9 @@ ht_tbl
       <td class="gt_row gt_right">1674</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">lightning</td>
-      <td class="gt_row gt_right">651</td>
-      <td class="gt_row gt_right">4141</td>
+      <td class="gt_row gt_left gt_striped">lightning</td>
+      <td class="gt_row gt_right gt_striped">651</td>
+      <td class="gt_row gt_right gt_striped">4141</td>
     </tr>
     <tr>
       <td class="gt_row gt_left">flood</td>
@@ -1140,9 +1199,9 @@ ht_tbl
       <td class="gt_row gt_right">6758</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">tsunami</td>
-      <td class="gt_row gt_right">289</td>
-      <td class="gt_row gt_right">3866</td>
+      <td class="gt_row gt_left gt_striped">tsunami</td>
+      <td class="gt_row gt_right gt_striped">289</td>
+      <td class="gt_row gt_right gt_striped">3866</td>
     </tr>
     <tr>
       <td class="gt_row gt_left">heat</td>
@@ -1150,9 +1209,9 @@ ht_tbl
       <td class="gt_row gt_right">1222</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">winter storm</td>
-      <td class="gt_row gt_right">191</td>
-      <td class="gt_row gt_right">1292</td>
+      <td class="gt_row gt_left gt_striped">winter storm</td>
+      <td class="gt_row gt_right gt_striped">191</td>
+      <td class="gt_row gt_right gt_striped">1292</td>
     </tr>
     <tr>
       <td class="gt_row gt_left">thunderstorm wind</td>
@@ -1160,14 +1219,58 @@ ht_tbl
       <td class="gt_row gt_right">1400</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">hurricane/typhoon</td>
-      <td class="gt_row gt_right">125</td>
-      <td class="gt_row gt_right">1328</td>
+      <td class="gt_row gt_left gt_striped">hurricane/typhoon</td>
+      <td class="gt_row gt_right gt_striped">125</td>
+      <td class="gt_row gt_right gt_striped">1328</td>
     </tr>
   </tbody>
-  
+  <tfoot class="gt_sourcenotes">
+    <tr>
+      <td class="gt_sourcenote" colspan="3">Source:  NOAA Storm Data</td>
+    </tr>
+  </tfoot>
   
 </table></div>
 ```
 
+*  Create a new data frame to plot health effects by storm type
+
+
+```r
+health_df <- data %>% group_by(year, event) %>% 
+        summarize(total_fatalities = sum(FATALITIES),
+                  total_injuries = sum(INJURIES))  %>% 
+        arrange(desc(total_fatalities, total_injuries)) %>% top_n(5)
+```
+
+```
+## `summarise()` has grouped output by 'year'. You can override using the `.groups` argument.
+```
+
+```
+## Selecting by total_injuries
+```
+
+```r
+m <- max(health_df$total_fatalities)
+
+g <- ggplot(data=health_df, aes(x=year, y=total_fatalities))
+g + geom_line(col="red") +
+        ggtitle("Total Fatalities, 1996-2011") +
+        facet_grid(.~ event) + 
+        coord_cartesian(ylim=c(0, log(m))) +
+        labs(y="Total Fatalities")
+```
+
+```
+## geom_path: Each group consists of only one observation. Do you need to adjust
+## the group aesthetic?
+```
+
+```
+## geom_path: Each group consists of only one observation. Do you need to adjust
+## the group aesthetic?
+```
+
+![](noaa_files/figure-html/fig2-1.png)<!-- -->
 
