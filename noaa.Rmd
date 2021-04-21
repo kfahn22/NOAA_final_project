@@ -11,10 +11,9 @@ output:
 
 ## Synopsis
 
-This It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set.  What is perhaps unexpected is that excessive heat leads to the most deaths. As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way. This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  While excessive heat causes the most deaths, tornados lead to a greater number of toal injuries and deaths.   
+It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set (refer to Table 1).  What is perhaps unexpected is that excessive heat causes the most deaths (refer to Table 2). As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way. This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  While excessive heat causes the most deaths, tornados lead to a greater number of combined injuries and deaths -- and in 2011 there was a very large number of fatalities/injuries caused by tornados (see Figures 2 and 3).  
 
 Does the document have a synopsis that describes and summarizes the data analysis in less than 10 sentences?
-
 
 ##  Data Processing
 
@@ -28,6 +27,12 @@ library(downloader)
 fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 download.file(fileUrl, destfile = "noaa.csv.bz2", method="curl")
 data <- read.csv("noaa.csv.bz2")
+```
+
+```{r state_region, cache=TRUE}
+fileUrl <- "https://raw.githubusercontent.com/kjhealy/fips-codes/master/state_fips_master.csv"
+download.file(fileUrl, destfile = "state_codes.csv", method="curl")
+state_codes <- read.csv("state_codes.csv")
 ```
 
 ### I.  Data Transformation
@@ -166,34 +171,99 @@ We were asked to explore which weather event type causes the most economic damag
 
 * Find total property and crop damage by year for each event type and rank to find the 10 most expensive types.
 
-```{r statistics, cache=TRUE}
-econ_damage <- econ_df %>% group_by(event) %>% 
-                  summarize(total_property_damage =                                             sprintf("%.0f",sum(units_adj_propdmg)/10^6),
-                  total_crop_damage = sprintf("%.0f",   sum(units_adj_cropdmg)/10^6) )
 
-table <- econ_damage %>% arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(10)
+```{r econ_stats}
+table1 <- econ_df %>% group_by(event) %>% 
+        summarize(total_property_damage = sum(units_adj_propdmg/10^6),
+                  total_crop_damage = sum(units_adj_cropdmg/10^6)) %>%
+        arrange(desc(total_property_damage)) %>%
+        top_n(10)
 ```
 
-```{r table1, results = "asis"}
+```{r us, results="asis"}
 library(gt)
-gt_tbl <- gt(table)
-gt_tbl <- gt_tbl %>%
- tab_header(
-    title = "Top Ten Most Costly Weather Types, by Property and Crop Damage,              1996-2001",
-    subtitle = "Millions of Dollars"
-) 
-gt_tbl <- gt_tbl %>%
-  tab_source_note(
-  source_note = "Source:  NOAA Storm Data"
-)
-gt_tbl <- gt_tbl %>% cols_label(
-  event = "Event",
-  total_property_damage = "Total Property Damage",
-  total_crop_damage = "Total Crop Damage"
-)
-gt_tbl <- opt_row_striping(gt_tbl, row_striping = TRUE)
-gt_tbl <- opt_table_outline(gt_tbl)
-gt_tbl
+library(dplyr)
+tab = econ_df %>% 
+        tibble() %>%
+        group_by(event) %>%
+        summarize(total_property_damage = sum(units_adj_propdmg/10^6),
+                  total_crop_damage = sum(units_adj_cropdmg/10^6)) %>%
+        arrange(desc(total_property_damage)) %>%
+        top_n(10) %>%
+        gt(rowname_col = "event") %>%
+        tab_header(
+        title = "Ten Most Costly Weather Events",
+        subtitle = "1996-2011")  %>% 
+        cols_align(align = "left") %>%
+        tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
+        fmt_currency(
+                columns = vars(total_property_damage), 
+                currency = "USD", decimals = 0)  %>%
+        cols_label(
+                event = "Event",
+                total_property_damage= "Total Property Damage",
+                total_crop_damage = "Total Crop Damage"
+                ) %>%
+        opt_row_striping(row_striping = TRUE) %>%
+        opt_table_outline() %>%
+        tab_options(
+                heading.background.color = "#85C1E9",
+                row.striping.background_color = "#EBF5FB",
+                column_labels.background.color = "#D6EAF8"
+        )
+print(tab)
+```
+
+
+
+Create factor variable for regions, adding territories and District of
+Columbia.
+
+```{r valid}
+states <- c(state_codes$state_abbr, "AS", "GU", "PR", "VI", "DC")
+valid <- econ_df$STATE %in% states
+```
+
+I filtered the data to only include rows with a valid state code.
+
+```{r region}
+region <- c(state_codes$region_name, "Territory", 
+            "Territory", "Territory","Territory", "District")
+econ_df$region <- factor(econ_df$STATE, levels = states,
+                         labels = region)
+
+econ_df <- econ_df[econ_df$STATE %in% states, ]
+```
+
+```{r region_table, results = "asis"}
+library(gt)
+library(dplyr)
+tab1 = econ_df %>% 
+        tibble() %>%
+        group_by(region, event) %>%
+        summarize(total_property_damage = 
+                          sum(units_adj_propdmg)/10^6) %>%
+        arrange(desc(total_property_damage)) %>% top_n(3) %>%
+        gt(rowname_col = "event") %>%
+        tab_header(
+        title = "Most Costly Weather Events by Region",
+        subtitle = "1996-2011")  %>% 
+        cols_align(align = "left") %>%
+        tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
+        fmt_currency(
+                columns = vars(total_property_damage), 
+                currency = "USD", decimals = 0)  %>%
+        cols_label(
+                total_property_damage = "Total Property Damage (Millions)",
+                ) %>%
+        #opt_row_striping(row_striping = TRUE) %>%
+        opt_table_outline() %>%
+        tab_options(
+                heading.background.color = "#85C1E9",
+                row_group.background.color = "#EBF5FB",
+                column_labels.background.color = "#D6EAF8"
+        )
+print(tab1)
 ```
 
 #### Create plot of yearly economic damage by the top 5 most destructive weather event types.  
@@ -204,27 +274,28 @@ gt_tbl
 * Create a panel plot of the economic damage for the top 5 most damaging weather event types
 * The y axis is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger than the damage from other events that it was necessary to change to a log scale.
 
+
 ```{r plot_df}
 library(dplyr)
-top_damage <- filter(econ_damage, event %in% official_event_names) %>%
+top_five_damage <- econ_df %>% group_by(event) %>% 
+        summarize(total_property_damage = sum(units_adj_propdmg/10^6),
+                  total_crop_damage = sum(units_adj_cropdmg/10^6)) %>%
           arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(5)
 
 ##create new data frame to plot
 df <- econ_df %>% group_by(year, event) %>% 
-        summarize(total_property_damage = sum(units_adj_propdmg/10^6),
-                  total_crop_damage = sum(units_adj_cropdmg/10^6)) 
-
-plot <- filter(df, event %in% top_damage$event)
+        summarize(total_property_damage = sum(units_adj_propdmg)/10^6,
+                  total_crop_damage = sum(units_adj_cropdmg)/10^6) 
+str(top_five_damage)
+plot <- filter(df, event %in% top_five_damage$event)
 plot$event <- as.factor(plot$event)
-
-str(plot)
 ```
 
 ```{r fig1, fig.width=10, fig.height=8}
 
 library(ggplot2)
 m <- max(plot$total_property_damage)
-p <- ggplot(data=plot, aes(year)) +
+d <- ggplot(data=plot, aes(year)) +
   geom_line(aes(y=log(total_property_damage), 
                 colour="total_property_damage")) +                geom_line(aes(y=log(total_crop_damage),                                                       colour = "total_crop_damage")) +
         labs(y="total cost", 
@@ -234,14 +305,14 @@ p <- ggplot(data=plot, aes(year)) +
         facet_grid(.~ event) + 
         coord_cartesian(ylim=c(0, log(m))) 
         
-print(p)
+print(d)
 ```
 
 ### B.  Human Impact of Weather Events 
 
 We were asked to explore which weather event type causes the most harm to human health. To answer this question, I first found the total number of fatalities and injries for each event type.  I then found the top ten most injurious weather types.   
 
-* Find total fatalities and injuries damage by year for each event type and rank to find the 10 most expensive types.
+* Find total fatalities and injuries by year for each event type and rank to find the 10 most expensive types.
 
 ```{r health}
 health <- data %>% group_by(event) %>% 
@@ -278,20 +349,47 @@ ht_tbl
 
 *  Create a new data frame to plot health effects by storm type
 
-```{r fig2}
+```{r fig2, fig.width=10, fig.height=8}
 
-health_df <- data %>% group_by(year, event) %>% 
+top_health <- filter(health, event %in% official_event_names) %>%
+          arrange(desc(total_fatalities, total_injuries)) %>% top_n(5)
+
+##create new data frame to plot
+df2 <- data %>% group_by(year, event) %>% 
         summarize(total_fatalities = sum(FATALITIES),
-                  total_injuries = sum(INJURIES))  %>% 
-        arrange(desc(total_fatalities, total_injuries)) %>% top_n(5)
+                  total_injuries = sum(INJURIES))
 
-m <- max(health_df$total_fatalities)
+plot2 <- filter(df2, event %in% top_health$event)
+plot2$event <- as.factor(plot2$event)
 
-g <- ggplot(data=health_df, aes(x=year, y=total_fatalities))
-g + geom_line(col="red") +
-        ggtitle("Total Fatalities, 1996-2011") +
-        facet_grid(.~ event) + 
-        coord_cartesian(ylim=c(0, log(m))) +
-        labs(y="Total Fatalities")
+#plot <- filter(df, event %in% top_damage$event)
+f<- max(plot2$total_fatalities)
+
+g <- ggplot(data=plot2, aes(x=year)) +
+       geom_col(aes(y=total_fatalities, fill=event)) +
+       labs(title="Total Fatalties by Weather Event Type, 1996-2011",
+       y="total number of persons",
+       caption="Figure 2")  
+       coord_cartesian(ylim=c(0, f)) 
+print(g)      
 ```
+
+*  Create a new data frame to plot health effects by storm type
+
+```{r fig3, fig.width=10, fig.height=8}
+
+#plot <- filter(df, event %in% top_damage$event)
+i<- max(plot2$total_fatalities)
+
+h <- ggplot(data=plot2, aes(x=year)) +
+       geom_col(aes(y=total_injuries, fill=event)) +
+       labs(title="Total Injuries by Weather Event Type, 1996-2011",
+       y="total number of persons",
+       caption="Figure 3")  
+       coord_cartesian(ylim=c(0, i)) 
+print(h)  
+```
+
+### Conclusion
+
 
