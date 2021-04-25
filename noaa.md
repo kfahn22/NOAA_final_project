@@ -1,7 +1,7 @@
 ---
-title: "Historical Weather Event Dominates Economic Damage, while Excessive Heat Leads to Most Deaths "
+title: "Flooding Leads to the Most Economic Damage, while Excessive Heat Leads to Most Deaths "
 author: "Kathryn Fahnline"
-date: "4/12/2021"
+date: "4/24/2021"
 output: 
   html_document:
     keep_md: true
@@ -11,15 +11,12 @@ output:
 
 ## Synopsis
 
-It is perhaps not surprising that the economic cost of Hurricane Katrina (2005) is an order of magnitude above all other weather events in the Storm data set (refer to Table 1).  What is perhaps unexpected is that excessive heat causes the most deaths (refer to Table 2). As my daughter pointed out, if the news outlets warn of a major impending storm, most reasonable people make plans to move out of harm's way. This is less likely to be true when there is a forecast of higher than normal temperatures; hence, the higher death rate.  While excessive heat causes the most deaths, tornados lead to a greater number of combined injuries and deaths -- and in 2011 there was a very large number of fatalities/injuries caused by tornados (see Figures 2 and 3).  
+I grew up close to Johnstown, PA--the site of one of the greatest floods in the US^[https://www.jaha.org/attractions/johnstown-flood-museum/flood-history/]--so I was not surprised that flooding leads to the most economic damage . Nor was I particularly surprised to learn that drought led to the most crop damage (refer to Table 1).  What I did find surprising is that excessive heat causes the most deaths. Tornadoes led to a greater number of combined injuries (refer to Table 3).  Figures 2 and 3 reveal that there is quite a bit of variation in which events have the greatest impact on human health by year -- in 1998 there were a large number of fatalities due to excessive heat, while in 2011 there were a very large number of fatalities/injuries caused by tornadoes.  
 
-Does the document have a synopsis that describes and summarizes the data analysis in less than 10 sentences?
+On a regional level, flooding in the West led to the most economic damage , while drought in the several regions of the country-- the Northeast, South, and West--led to the most crop damage (refer to Table 2). People were more likely to die in the South from a tornado, but more likely to die from excessive heat in the Midwest or Northeast (refer to Table 4).     
 
 ##  Data Processing
 
-Thanks to Mentor Usama Khalil's useful post on cleaning the storm data.
-[1]
-[https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]  and this guide to handling the coding of CROPDMGEXP and PROPDMGEXP [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]
 
 
 
@@ -29,6 +26,8 @@ fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv
 download.file(fileUrl, destfile = "noaa.csv.bz2", method="curl")
 data <- read.csv("noaa.csv.bz2")
 ```
+
+I wanted to break the analysis down by region, so I downloaded a csv file with state codes created by KJ Healy. [fipscodes](https://github.com/kjhealy/fips-codes)^[In order to download a csv file from github, you need to click on the link for raw data.]
 
 
 ```r
@@ -112,9 +111,12 @@ str(data)
 data <- select(data, c(STATE, BGN_DATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP))
 ```
 
-#### Filter data based on number of weather events in data set
+I only kept the columns of data that were necessary to determne which weather events had the greatest impact on economic damage and human health.
 
-From the NOAA website, I learned that starting in 1996, 48 event types are recorded in the Storm Events Database.  Before 1996, only tornado (1950-present), thunderstorm, wind and hail (1955-present) were recorded. [https://www.ncdc.noaa.gov/stormevents/details.jsp]  Because this assignment asks us to determine which events have the biggest effect on human health or largest economic impact, I have filtered for data set to only include records with the complete set of event data from 1996.
+#### Filter data based on number of weather events in data set^[Thanks to Mentor Usama Khalil's useful post on cleaning the storm data.[https://www.coursera.org/learn/reproducible-research/discussions/all/threads/38y35MMiEeiERhLphT2-QA]]
+
+
+From the NOAA website, I learned that starting in 1996, 48 event types are recorded in the Storm Events Database.  Before 1996, only tornado (1950-present), thunderstorm, wind and hail (1955-present) were recorded.[Storm Data](https://www.ncdc.noaa.gov/stormevents/details.jsp)  Because this assignment asks us to determine which events have the biggest effect on human health or largest economic impact, I have filtered for data set to only include records with the complete set of event data from 1996.
 
 
 ```r
@@ -129,7 +131,7 @@ The event names are not all coded in the same way, so I created a new variable, 
 
 * tolower was used to change the event names to lower case
 * grepl was used to find the index of for all variations of a specific event type 
-* the index was used to replace all variations with the official name, as stated in the documentation.[https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf]
+* the index was used to replace all variations with the official name, as stated in the documentation.[Storm Data Event Table](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
 
 
 ```r
@@ -194,11 +196,18 @@ There are some event names that are are not clearly in one of the standarized ev
 ```r
 library(dplyr)
 bad_names <- setdiff(data$event, official_event_names)
+bn <- length(bad_names)
 data <- filter(data, event %in% official_event_names)
 ```
 
-#### Filter data set to exclude rows w/ either missing data for PROPDMGEXP or 
-CROPDMGEXP
+There are 247 observations with invalid event names which were removed from the data set.    
+
+#### Cleaning the CROPDMG and PROPDMG variables 
+
+I made the following tranformations to the CROPDMG and PROPDMG.^[I found this guide to handling the coding of CROPDMGEXP and PROPDMGEXP very helpful. [https://rstudio-pubs-static.s3.amazonaws.com/58957_37b6723ee52b455990e149edde45e5b6.html]]
+
+* Filter data set to exclude rows w/ either missing data for PROPDMGEXP or CROPDMGEXP
+* Created a function to adjust for different units in CROPDMGEXP and PROPDMGEXP
 
 
 ```r
@@ -227,7 +236,7 @@ transform <- function (x, y) {
 }
 ```
 
-* Use transform to adjust CROPDMGEXP and PROPDMGEXP
+* Use **transform** to adjust CROPDMG and PROPDMG to account for the different units in the original data base.
 
 
 ```r
@@ -235,29 +244,40 @@ econ_df$units_adj_cropdmg <- mapply(transform,
                 econ_df$CROPDMGEXP, econ_df$CROPDMG)
 econ_df$units_adj_propdmg <- mapply(transform, 
                 econ_df$PROPDMGEXP, econ_df$PROPDMG)
+econ_length <- nrow(econ_df)
 ```
+
+After all of the cleaning, the econ_df data set contains 377025 observations.
+
+#### Create a factor variable for the region of the country
+
+* There are 50 states plus the DC and 5 territories.
+
+```r
+states_territories <- c(state_codes$state_abbr, "AS", "GU", "PR", "VI", "MP")
+length <- length(unique(econ_df$STATE))
+```
+
+Therefore, there should be 56 unique state codes. However, there are  69 unique codes in the STATE variable. There is no way to determine what code should have been entered, so when I do the regional analysis I have filtered out the observations associated with the 13 invalid state codes plus DC when creating the table on economic damage by region.^[Wen I created the table on regional effects, there was so little data for DC that it was not filtering properly.]    
+
+*  create a factor variable for the region of the country
+
+
+```r
+region <- c(state_codes$region_name, "Territory", 
+            "Territory", "Territory","Territory", "Territory")
+econ_df$region <- factor(econ_df$STATE, levels = states_territories,
+                         labels = region)
+```
+
 
 ### II.  Data Analysis
 
 #### A.  Economic Impact of Storms by Event Type
 
-We were asked to explore which weather event type causes the most economic damage. To answer this question, I first found the total property and crop damage for each event type.  I then found the top ten most destructive weather types.   
+We were asked to explore which weather event type causes the most economic damage. To answer this question, I first found the total property and crop damage for each event type and ranked by total property damage.  I then found the top three destructive weather types by region of the country.   
 
 * Find total property and crop damage by year for each event type and rank to find the 10 most expensive types.
-
-
-
-```r
-table1 <- econ_df %>% group_by(event) %>% 
-        summarize(total_property_damage = sum(units_adj_propdmg/10^6),
-                  total_crop_damage = sum(units_adj_cropdmg/10^6)) %>%
-        arrange(desc(total_property_damage)) %>%
-        top_n(10)
-```
-
-```
-## Selecting by total_crop_damage
-```
 
 
 ```r
@@ -272,12 +292,12 @@ tab = econ_df %>%
         top_n(10) %>%
         gt(rowname_col = "event") %>%
         tab_header(
-        title = "Ten Most Costly Weather Events",
+        title = "Table 1:  Ten Most Costly Weather Events (Millions)",
         subtitle = "1996-2011")  %>% 
         cols_align(align = "left") %>%
         tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
         fmt_currency(
-                columns = vars(total_property_damage), 
+                columns = vars(total_property_damage, total_crop_damage), 
                 currency = "USD", decimals = 0)  %>%
         cols_label(
                 event = "Event",
@@ -305,7 +325,7 @@ print(tab)
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#jghvsqdqpg .gt_table {
+#ztriyklnvc .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -330,7 +350,7 @@ print(tab)
   border-left-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_heading {
+#ztriyklnvc .gt_heading {
   background-color: #85C1E9;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -342,7 +362,7 @@ print(tab)
   border-right-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_title {
+#ztriyklnvc .gt_title {
   color: #FFFFFF;
   font-size: 125%;
   font-weight: initial;
@@ -352,7 +372,7 @@ print(tab)
   border-bottom-width: 0;
 }
 
-#jghvsqdqpg .gt_subtitle {
+#ztriyklnvc .gt_subtitle {
   color: #FFFFFF;
   font-size: 85%;
   font-weight: initial;
@@ -362,13 +382,13 @@ print(tab)
   border-top-width: 0;
 }
 
-#jghvsqdqpg .gt_bottom_border {
+#ztriyklnvc .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_col_headings {
+#ztriyklnvc .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -383,7 +403,7 @@ print(tab)
   border-right-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_col_heading {
+#ztriyklnvc .gt_col_heading {
   color: #333333;
   background-color: #D6EAF8;
   font-size: 100%;
@@ -403,7 +423,7 @@ print(tab)
   overflow-x: hidden;
 }
 
-#jghvsqdqpg .gt_column_spanner_outer {
+#ztriyklnvc .gt_column_spanner_outer {
   color: #333333;
   background-color: #D6EAF8;
   font-size: 100%;
@@ -415,15 +435,15 @@ print(tab)
   padding-right: 4px;
 }
 
-#jghvsqdqpg .gt_column_spanner_outer:first-child {
+#ztriyklnvc .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#jghvsqdqpg .gt_column_spanner_outer:last-child {
+#ztriyklnvc .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#jghvsqdqpg .gt_column_spanner {
+#ztriyklnvc .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -435,7 +455,7 @@ print(tab)
   width: 100%;
 }
 
-#jghvsqdqpg .gt_group_heading {
+#ztriyklnvc .gt_group_heading {
   padding: 8px;
   color: #333333;
   background-color: #FFFFFF;
@@ -457,7 +477,7 @@ print(tab)
   vertical-align: middle;
 }
 
-#jghvsqdqpg .gt_empty_group_heading {
+#ztriyklnvc .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -472,15 +492,15 @@ print(tab)
   vertical-align: middle;
 }
 
-#jghvsqdqpg .gt_from_md > :first-child {
+#ztriyklnvc .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#jghvsqdqpg .gt_from_md > :last-child {
+#ztriyklnvc .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#jghvsqdqpg .gt_row {
+#ztriyklnvc .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -499,7 +519,7 @@ print(tab)
   overflow-x: hidden;
 }
 
-#jghvsqdqpg .gt_stub {
+#ztriyklnvc .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -511,7 +531,7 @@ print(tab)
   padding-left: 12px;
 }
 
-#jghvsqdqpg .gt_summary_row {
+#ztriyklnvc .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -521,7 +541,7 @@ print(tab)
   padding-right: 5px;
 }
 
-#jghvsqdqpg .gt_first_summary_row {
+#ztriyklnvc .gt_first_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -531,7 +551,7 @@ print(tab)
   border-top-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_grand_summary_row {
+#ztriyklnvc .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -541,7 +561,7 @@ print(tab)
   padding-right: 5px;
 }
 
-#jghvsqdqpg .gt_first_grand_summary_row {
+#ztriyklnvc .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -551,11 +571,11 @@ print(tab)
   border-top-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_striped {
+#ztriyklnvc .gt_striped {
   background-color: #EBF5FB;
 }
 
-#jghvsqdqpg .gt_table_body {
+#ztriyklnvc .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -564,7 +584,7 @@ print(tab)
   border-bottom-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_footnotes {
+#ztriyklnvc .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -578,13 +598,13 @@ print(tab)
   border-right-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_footnote {
+#ztriyklnvc .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding: 4px;
 }
 
-#jghvsqdqpg .gt_sourcenotes {
+#ztriyklnvc .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -598,49 +618,49 @@ print(tab)
   border-right-color: #D3D3D3;
 }
 
-#jghvsqdqpg .gt_sourcenote {
+#ztriyklnvc .gt_sourcenote {
   font-size: 90%;
   padding: 4px;
 }
 
-#jghvsqdqpg .gt_left {
+#ztriyklnvc .gt_left {
   text-align: left;
 }
 
-#jghvsqdqpg .gt_center {
+#ztriyklnvc .gt_center {
   text-align: center;
 }
 
-#jghvsqdqpg .gt_right {
+#ztriyklnvc .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#jghvsqdqpg .gt_font_normal {
+#ztriyklnvc .gt_font_normal {
   font-weight: normal;
 }
 
-#jghvsqdqpg .gt_font_bold {
+#ztriyklnvc .gt_font_bold {
   font-weight: bold;
 }
 
-#jghvsqdqpg .gt_font_italic {
+#ztriyklnvc .gt_font_italic {
   font-style: italic;
 }
 
-#jghvsqdqpg .gt_super {
+#ztriyklnvc .gt_super {
   font-size: 65%;
 }
 
-#jghvsqdqpg .gt_footnote_marks {
+#ztriyklnvc .gt_footnote_marks {
   font-style: italic;
   font-size: 65%;
 }
 </style>
-<div id="jghvsqdqpg" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+<div id="ztriyklnvc" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
   <thead class="gt_header">
     <tr>
-      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Ten Most Costly Weather Events</th>
+      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Table 1:  Ten Most Costly Weather Events (Millions)</th>
     </tr>
     <tr>
       <th colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>1996-2011</th>
@@ -657,52 +677,52 @@ print(tab)
     <tr>
       <td class="gt_row gt_left gt_stub">flood</td>
       <td class="gt_row gt_left">$143,945</td>
-      <td class="gt_row gt_left">4974.7784</td>
+      <td class="gt_row gt_left">$4,975</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">hurricane/typhoon</td>
       <td class="gt_row gt_left gt_striped">$81,719</td>
-      <td class="gt_row gt_left gt_striped">5350.1078</td>
+      <td class="gt_row gt_left gt_striped">$5,350</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">flash flood</td>
       <td class="gt_row gt_left">$15,222</td>
-      <td class="gt_row gt_left">1334.9017</td>
+      <td class="gt_row gt_left">$1,335</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">hail</td>
       <td class="gt_row gt_left gt_striped">$14,595</td>
-      <td class="gt_row gt_left gt_striped">2496.8225</td>
+      <td class="gt_row gt_left gt_striped">$2,497</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">tropical storm</td>
       <td class="gt_row gt_left">$7,642</td>
-      <td class="gt_row gt_left">677.7110</td>
+      <td class="gt_row gt_left">$678</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">high wind</td>
       <td class="gt_row gt_left gt_striped">$5,248</td>
-      <td class="gt_row gt_left gt_striped">633.5613</td>
+      <td class="gt_row gt_left gt_striped">$634</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">tsunami</td>
       <td class="gt_row gt_left">$4,680</td>
-      <td class="gt_row gt_left">618.6316</td>
+      <td class="gt_row gt_left">$619</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">drought</td>
       <td class="gt_row gt_left gt_striped">$1,077</td>
-      <td class="gt_row gt_left gt_striped">14707.3315</td>
+      <td class="gt_row gt_left gt_striped">$14,707</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">heavy rain</td>
       <td class="gt_row gt_left">$585</td>
-      <td class="gt_row gt_left">738.4198</td>
+      <td class="gt_row gt_left">$738</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">frost/freeze</td>
       <td class="gt_row gt_left gt_striped">$19</td>
-      <td class="gt_row gt_left gt_striped">1326.7610</td>
+      <td class="gt_row gt_left gt_striped">$1,327</td>
     </tr>
   </tbody>
   <tfoot class="gt_sourcenotes">
@@ -713,28 +733,27 @@ print(tab)
   
 </table></div>
 
+The most economic damage was cased by *floods*, followed by *hurricanes/tornadoes*. *Drought* led to the most crop damage.  
 
+* Create factor variable for regions--adding territories
+which can be found here[hud.gov](hud.gov/sites/documents/22211X2CHCH.PDF)
 
-Create factor variable for regions, adding territories and District of
-Columbia.
+#### Filter data set to remove invalid state codes
 
-
-```r
-states <- c(state_codes$state_abbr, "AS", "GU", "PR", "VI", "DC")
-valid <- econ_df$STATE %in% states
-```
-
-I filtered the data to only include rows with a valid state code.
+*  create a factor variable for the region of the country
+*  filter for valid state codes 
 
 
 ```r
-region <- c(state_codes$region_name, "Territory", 
-            "Territory", "Territory","Territory", "District")
-econ_df$region <- factor(econ_df$STATE, levels = states,
-                         labels = region)
-
-econ_df <- econ_df[econ_df$STATE %in% states, ]
+econ_df <- econ_df[econ_df$STATE %in% states_territories, ]
 ```
+
+*  Create a table with the total property damage by region.  I used the package gt to create my tables.  The documentation for this package can be found here.[https://gt.rstudio.com/articles/intro-creating-gt-tables.html]  This package is fairly new, so I also read the very helpful tutorial at [towarddatascience.com](https://towardsdatascience.com/exploring-the-gt-grammar-of-tables-package-in-r-7fff9d0b40cd) 
+
+*  filter out the District of Columbia^[I am not sure why, but when DC is included it listed all of the events (which mostly had a value of zero), not just the top three.]
+*  group by region and event and find total property and crop damage
+*  arrange in descending order by total property damage and report top 3
+
 
 
 ```r
@@ -744,21 +763,24 @@ tab1 = econ_df %>%
         tibble() %>%
         group_by(region, event) %>%
         summarize(total_property_damage = 
-                          sum(units_adj_propdmg)/10^6) %>%
-        arrange(desc(total_property_damage)) %>% top_n(3) %>%
+                          sum(units_adj_propdmg)/10^6,
+                  total_crop_damage = 
+                          sum(units_adj_cropdmg)/10^6)%>%
+        arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(3)          %>%
         gt(rowname_col = "event") %>%
         tab_header(
-        title = "Most Costly Weather Events by Region",
+        title = "Table 2:  Most Costly Weather Events by Region (Millions)",
         subtitle = "1996-2011")  %>% 
         cols_align(align = "left") %>%
         tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
         fmt_currency(
-                columns = vars(total_property_damage), 
+                columns = vars(total_property_damage, total_crop_damage), 
                 currency = "USD", decimals = 0)  %>%
         cols_label(
-                total_property_damage = "Total Property Damage (Millions)",
+                total_property_damage = "Total Property Damage",
+                total_crop_damage = "Total Crop Damage"
                 ) %>%
-        #opt_row_striping(row_striping = TRUE) %>%
+        opt_row_striping(row_striping = TRUE) %>%
         opt_table_outline() %>%
         tab_options(
                 heading.background.color = "#85C1E9",
@@ -772,7 +794,7 @@ tab1 = econ_df %>%
 ```
 
 ```
-## Selecting by total_property_damage
+## Selecting by total_crop_damage
 ```
 
 ```r
@@ -783,7 +805,7 @@ print(tab1)
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#rgiwhewbqb .gt_table {
+#cqtkdtpcmm .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -808,7 +830,7 @@ print(tab1)
   border-left-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_heading {
+#cqtkdtpcmm .gt_heading {
   background-color: #85C1E9;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -820,7 +842,7 @@ print(tab1)
   border-right-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_title {
+#cqtkdtpcmm .gt_title {
   color: #FFFFFF;
   font-size: 125%;
   font-weight: initial;
@@ -830,7 +852,7 @@ print(tab1)
   border-bottom-width: 0;
 }
 
-#rgiwhewbqb .gt_subtitle {
+#cqtkdtpcmm .gt_subtitle {
   color: #FFFFFF;
   font-size: 85%;
   font-weight: initial;
@@ -840,13 +862,13 @@ print(tab1)
   border-top-width: 0;
 }
 
-#rgiwhewbqb .gt_bottom_border {
+#cqtkdtpcmm .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_col_headings {
+#cqtkdtpcmm .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -861,7 +883,7 @@ print(tab1)
   border-right-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_col_heading {
+#cqtkdtpcmm .gt_col_heading {
   color: #333333;
   background-color: #D6EAF8;
   font-size: 100%;
@@ -881,7 +903,7 @@ print(tab1)
   overflow-x: hidden;
 }
 
-#rgiwhewbqb .gt_column_spanner_outer {
+#cqtkdtpcmm .gt_column_spanner_outer {
   color: #333333;
   background-color: #D6EAF8;
   font-size: 100%;
@@ -893,15 +915,15 @@ print(tab1)
   padding-right: 4px;
 }
 
-#rgiwhewbqb .gt_column_spanner_outer:first-child {
+#cqtkdtpcmm .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#rgiwhewbqb .gt_column_spanner_outer:last-child {
+#cqtkdtpcmm .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#rgiwhewbqb .gt_column_spanner {
+#cqtkdtpcmm .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -913,7 +935,7 @@ print(tab1)
   width: 100%;
 }
 
-#rgiwhewbqb .gt_group_heading {
+#cqtkdtpcmm .gt_group_heading {
   padding: 8px;
   color: #333333;
   background-color: #EBF5FB;
@@ -935,7 +957,7 @@ print(tab1)
   vertical-align: middle;
 }
 
-#rgiwhewbqb .gt_empty_group_heading {
+#cqtkdtpcmm .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #EBF5FB;
@@ -950,15 +972,15 @@ print(tab1)
   vertical-align: middle;
 }
 
-#rgiwhewbqb .gt_from_md > :first-child {
+#cqtkdtpcmm .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#rgiwhewbqb .gt_from_md > :last-child {
+#cqtkdtpcmm .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#rgiwhewbqb .gt_row {
+#cqtkdtpcmm .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -977,7 +999,7 @@ print(tab1)
   overflow-x: hidden;
 }
 
-#rgiwhewbqb .gt_stub {
+#cqtkdtpcmm .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -989,7 +1011,7 @@ print(tab1)
   padding-left: 12px;
 }
 
-#rgiwhewbqb .gt_summary_row {
+#cqtkdtpcmm .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -999,7 +1021,7 @@ print(tab1)
   padding-right: 5px;
 }
 
-#rgiwhewbqb .gt_first_summary_row {
+#cqtkdtpcmm .gt_first_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1009,7 +1031,7 @@ print(tab1)
   border-top-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_grand_summary_row {
+#cqtkdtpcmm .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1019,7 +1041,7 @@ print(tab1)
   padding-right: 5px;
 }
 
-#rgiwhewbqb .gt_first_grand_summary_row {
+#cqtkdtpcmm .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1029,11 +1051,11 @@ print(tab1)
   border-top-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_striped {
+#cqtkdtpcmm .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#rgiwhewbqb .gt_table_body {
+#cqtkdtpcmm .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1042,7 +1064,7 @@ print(tab1)
   border-bottom-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_footnotes {
+#cqtkdtpcmm .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1056,13 +1078,13 @@ print(tab1)
   border-right-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_footnote {
+#cqtkdtpcmm .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding: 4px;
 }
 
-#rgiwhewbqb .gt_sourcenotes {
+#cqtkdtpcmm .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1076,159 +1098,162 @@ print(tab1)
   border-right-color: #D3D3D3;
 }
 
-#rgiwhewbqb .gt_sourcenote {
+#cqtkdtpcmm .gt_sourcenote {
   font-size: 90%;
   padding: 4px;
 }
 
-#rgiwhewbqb .gt_left {
+#cqtkdtpcmm .gt_left {
   text-align: left;
 }
 
-#rgiwhewbqb .gt_center {
+#cqtkdtpcmm .gt_center {
   text-align: center;
 }
 
-#rgiwhewbqb .gt_right {
+#cqtkdtpcmm .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#rgiwhewbqb .gt_font_normal {
+#cqtkdtpcmm .gt_font_normal {
   font-weight: normal;
 }
 
-#rgiwhewbqb .gt_font_bold {
+#cqtkdtpcmm .gt_font_bold {
   font-weight: bold;
 }
 
-#rgiwhewbqb .gt_font_italic {
+#cqtkdtpcmm .gt_font_italic {
   font-style: italic;
 }
 
-#rgiwhewbqb .gt_super {
+#cqtkdtpcmm .gt_super {
   font-size: 65%;
 }
 
-#rgiwhewbqb .gt_footnote_marks {
+#cqtkdtpcmm .gt_footnote_marks {
   font-style: italic;
   font-size: 65%;
 }
 </style>
-<div id="rgiwhewbqb" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+<div id="cqtkdtpcmm" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
   <thead class="gt_header">
     <tr>
-      <th colspan="2" class="gt_heading gt_title gt_font_normal" style>Most Costly Weather Events by Region</th>
+      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Table 2:  Most Costly Weather Events by Region (Millions)</th>
     </tr>
     <tr>
-      <th colspan="2" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>1996-2011</th>
+      <th colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>1996-2011</th>
     </tr>
   </thead>
   <thead class="gt_col_headings">
     <tr>
       <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"></th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Total Property Damage (Millions)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Total Property Damage</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Total Crop Damage</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
     <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">West</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left gt_stub">flood</td>
-      <td class="gt_row gt_left">$119,082</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left gt_stub">hail</td>
-      <td class="gt_row gt_left">$4,556</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left gt_stub">wildfire</td>
-      <td class="gt_row gt_left">$3,991</td>
-    </tr>
-    <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">South</td>
+      <td colspan="3" class="gt_group_heading">South</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">hurricane/typhoon</td>
       <td class="gt_row gt_left">$78,941</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left gt_stub">storm surge/tide</td>
-      <td class="gt_row gt_left">$47,791</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left gt_stub">tornado</td>
-      <td class="gt_row gt_left">$15,480</td>
-    </tr>
-    <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">Midwest</td>
+      <td class="gt_row gt_left">$4,793</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">flood</td>
-      <td class="gt_row gt_left">$8,513</td>
+      <td class="gt_row gt_left gt_striped">$10,216</td>
+      <td class="gt_row gt_left gt_striped">$905</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_stub">tornado</td>
-      <td class="gt_row gt_left">$7,905</td>
+      <td class="gt_row gt_left gt_stub">drought</td>
+      <td class="gt_row gt_left">$399</td>
+      <td class="gt_row gt_left">$10,007</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">Midwest</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">flood</td>
+      <td class="gt_row gt_left gt_striped">$8,513</td>
+      <td class="gt_row gt_left gt_striped">$3,681</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">hail</td>
       <td class="gt_row gt_left">$6,170</td>
-    </tr>
-    <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">Northeast</td>
+      <td class="gt_row gt_left">$1,466</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_stub">flood</td>
-      <td class="gt_row gt_left">$6,007</td>
+      <td class="gt_row gt_left gt_stub">drought</td>
+      <td class="gt_row gt_left gt_striped">$655</td>
+      <td class="gt_row gt_left gt_striped">$3,155</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">Northeast</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">flash flood</td>
       <td class="gt_row gt_left">$4,311</td>
+      <td class="gt_row gt_left">$20</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_stub">tornado</td>
-      <td class="gt_row gt_left">$756</td>
+      <td class="gt_row gt_left gt_stub">hail</td>
+      <td class="gt_row gt_left gt_striped">$15</td>
+      <td class="gt_row gt_left gt_striped">$103</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">drought</td>
+      <td class="gt_row gt_left">$1</td>
+      <td class="gt_row gt_left">$702</td>
     </tr>
     <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">Territory</td>
+      <td colspan="3" class="gt_group_heading">Territory</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">hurricane/typhoon</td>
-      <td class="gt_row gt_left">$2,777</td>
-    </tr>
-    <tr>
-      <td class="gt_row gt_left gt_stub">flash flood</td>
-      <td class="gt_row gt_left">$256</td>
+      <td class="gt_row gt_left gt_striped">$2,777</td>
+      <td class="gt_row gt_left gt_striped">$557</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">flood</td>
       <td class="gt_row gt_left">$116</td>
-    </tr>
-    <tr class="gt_group_heading_row">
-      <td colspan="2" class="gt_group_heading">District</td>
+      <td class="gt_row gt_left">$48</td>
     </tr>
     <tr>
       <td class="gt_row gt_left gt_stub">tropical storm</td>
-      <td class="gt_row gt_left">$128</td>
+      <td class="gt_row gt_left gt_striped">$101</td>
+      <td class="gt_row gt_left gt_striped">$104</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">West</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_stub">flash flood</td>
-      <td class="gt_row gt_left">$16</td>
+      <td class="gt_row gt_left gt_stub">heavy rain</td>
+      <td class="gt_row gt_left">$517</td>
+      <td class="gt_row gt_left">$717</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_stub">flood</td>
-      <td class="gt_row gt_left">$10</td>
+      <td class="gt_row gt_left gt_stub">drought</td>
+      <td class="gt_row gt_left gt_striped">$17</td>
+      <td class="gt_row gt_left gt_striped">$844</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">frost/freeze</td>
+      <td class="gt_row gt_left">$6</td>
+      <td class="gt_row gt_left">$503</td>
     </tr>
   </tbody>
   <tfoot class="gt_sourcenotes">
     <tr>
-      <td class="gt_sourcenote" colspan="2">Source:  NOAA Storm Data</td>
+      <td class="gt_sourcenote" colspan="3">Source:  NOAA Storm Data</td>
     </tr>
   </tfoot>
   
 </table></div>
+
+*Flooding* in the West led to the most economic damage, followed by *hurricane/tornado* damage in the South. 
 
 #### Create plot of yearly economic damage by the top 5 most destructive weather event types.  
 
@@ -1236,12 +1261,13 @@ print(tab1)
 * Change event to a factor variable
 * Filter the data set to include only the top 5 most damaging weather event  types
 * Create a panel plot of the economic damage for the top 5 most damaging weather event types
-* The y axis is total property damage in log(millions of dollars).  Note that the damage from Hurricane Katrina in 2005 is so much larger than the damage from other events that it was necessary to change to a log scale.
+* The y axis is total property damage in log(millions of dollars).  Note that the damage from flooding in 2005 is so much larger than the damage from other events that I changed it to a log scale.
 
 
 
 ```r
 library(dplyr)
+
 top_five_damage <- econ_df %>% group_by(event) %>% 
         summarize(total_property_damage = sum(units_adj_propdmg/10^6),
                   total_crop_damage = sum(units_adj_cropdmg/10^6)) %>%
@@ -1253,25 +1279,14 @@ top_five_damage <- econ_df %>% group_by(event) %>%
 ```
 
 ```r
-##create new data frame to plot
+##create new data frame to plot, grouped by both year and event
 df <- econ_df %>% group_by(year, event) %>% 
         summarize(total_property_damage = sum(units_adj_propdmg)/10^6,
-                  total_crop_damage = sum(units_adj_cropdmg)/10^6) 
+                  total_crop_damage = sum(units_adj_cropdmg)/10^6)
 ```
 
 ```
 ## `summarise()` has grouped output by 'year'. You can override using the `.groups` argument.
-```
-
-```r
-str(top_five_damage)
-```
-
-```
-## tibble [5 × 3] (S3: tbl_df/tbl/data.frame)
-##  $ event                : chr [1:5] "flood" "hurricane/typhoon" "flash flood" "hail" ...
-##  $ total_property_damage: num [1:5] 143945 81719 15222 14595 1077
-##  $ total_crop_damage    : num [1:5] 4975 5350 1335 2497 14707
 ```
 
 ```r
@@ -1282,6 +1297,7 @@ plot$event <- as.factor(plot$event)
 
 ```r
 library(ggplot2)
+
 m <- max(plot$total_property_damage)
 d <- ggplot(data=plot, aes(year)) +
   geom_line(aes(y=log(total_property_damage), 
@@ -1292,15 +1308,16 @@ d <- ggplot(data=plot, aes(year)) +
         caption = "Figure 1") +
         facet_grid(.~ event) + 
         coord_cartesian(ylim=c(0, log(m))) 
-        
-print(d)
+d + scale_colour_manual(values = c("#85C1E9", "#845EC2")) + theme_linedraw()      
 ```
 
 ![](noaa_files/figure-html/fig1-1.png)<!-- -->
 
 ### B.  Human Impact of Weather Events 
 
-We were asked to explore which weather event type causes the most harm to human health. To answer this question, I first found the total number of fatalities and injries for each event type.  I then found the top ten most injurious weather types.   
+We were asked to explore which weather event type causes the most harm to human health. To answer this question, I first found the total number of fatalities and injuries for each event type.  I then found the top ten most impactful weather types.   
+
+#### Total US Health Impact
 
 * Find total fatalities and injuries by year for each event type and rank to find the 10 most expensive types.
 
@@ -1323,32 +1340,46 @@ health_table <- health %>%
 
 ```r
 library(gt)
-ht_tbl <- gt(health_table)
-ht_tbl <- ht_tbl %>%
- tab_header(
-    title = "Weather Types Ranked by Impact on Human Health",
-    subtitle = "1996-2001"
-    ) 
-ht_tbl <- ht_tbl %>%
-  tab_source_note(
-  source_note = "Source:  NOAA Storm Data"
-) 
-ht_tbl <- ht_tbl %>% cols_label(
-  event = "Event",
-  total_fatalities = "Total Fatalities",
-  total_injuries = "Total Injuries"
-)
-ht_tbl <- opt_row_striping(ht_tbl, row_striping = TRUE)
-ht_tbl <- opt_table_outline(ht_tbl)
-ht_tbl
+ht_tbl <- data %>%
+          tibble() %>%
+          group_by(event) %>%
+          summarize(total_fatalities = sum(FATALITIES),
+                  total_injuries = sum(INJURIES)) %>%
+          arrange(desc(total_fatalities)) %>%
+          top_n(10) %>%
+          gt(rowname_col = "event") %>%
+          tab_header(
+            title = "Table 3:  Weather Types Ranked by Impact on Human Health",
+            subtitle = "1996-2001") %>%
+            cols_align(align = "left") %>%
+            tab_source_note(source_note = "Source:  NOAA Storm Data") %>%
+            cols_label(
+              event = "Event",
+              total_fatalities = "Total Fatalities",
+              total_injuries = "Total Injuries"
+            )  %>%
+           opt_row_striping(row_striping = TRUE) %>%
+           opt_table_outline() %>%
+           tab_options(
+             heading.background.color = "#85C1E9",
+             row.striping.background_color = "EBF5FB",
+             column_labels.background.color = "#D6EAF8"
+            )
 ```
 
-```{=html}
+```
+## Selecting by total_injuries
+```
+
+```r
+print(ht_tbl)
+```
+
 <style>html {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
 }
 
-#rsepkrzyxr .gt_table {
+#fqhbzvecvk .gt_table {
   display: table;
   border-collapse: collapse;
   margin-left: auto;
@@ -1373,8 +1404,8 @@ ht_tbl
   border-left-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_heading {
-  background-color: #FFFFFF;
+#fqhbzvecvk .gt_heading {
+  background-color: #85C1E9;
   text-align: center;
   border-bottom-color: #FFFFFF;
   border-left-style: none;
@@ -1385,8 +1416,8 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_title {
-  color: #333333;
+#fqhbzvecvk .gt_title {
+  color: #FFFFFF;
   font-size: 125%;
   font-weight: initial;
   padding-top: 4px;
@@ -1395,8 +1426,8 @@ ht_tbl
   border-bottom-width: 0;
 }
 
-#rsepkrzyxr .gt_subtitle {
-  color: #333333;
+#fqhbzvecvk .gt_subtitle {
+  color: #FFFFFF;
   font-size: 85%;
   font-weight: initial;
   padding-top: 0;
@@ -1405,13 +1436,13 @@ ht_tbl
   border-top-width: 0;
 }
 
-#rsepkrzyxr .gt_bottom_border {
+#fqhbzvecvk .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_col_headings {
+#fqhbzvecvk .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1426,9 +1457,9 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_col_heading {
+#fqhbzvecvk .gt_col_heading {
   color: #333333;
-  background-color: #FFFFFF;
+  background-color: #D6EAF8;
   font-size: 100%;
   font-weight: normal;
   text-transform: inherit;
@@ -1446,9 +1477,9 @@ ht_tbl
   overflow-x: hidden;
 }
 
-#rsepkrzyxr .gt_column_spanner_outer {
+#fqhbzvecvk .gt_column_spanner_outer {
   color: #333333;
-  background-color: #FFFFFF;
+  background-color: #D6EAF8;
   font-size: 100%;
   font-weight: normal;
   text-transform: inherit;
@@ -1458,15 +1489,15 @@ ht_tbl
   padding-right: 4px;
 }
 
-#rsepkrzyxr .gt_column_spanner_outer:first-child {
+#fqhbzvecvk .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#rsepkrzyxr .gt_column_spanner_outer:last-child {
+#fqhbzvecvk .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#rsepkrzyxr .gt_column_spanner {
+#fqhbzvecvk .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1478,7 +1509,7 @@ ht_tbl
   width: 100%;
 }
 
-#rsepkrzyxr .gt_group_heading {
+#fqhbzvecvk .gt_group_heading {
   padding: 8px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1500,7 +1531,7 @@ ht_tbl
   vertical-align: middle;
 }
 
-#rsepkrzyxr .gt_empty_group_heading {
+#fqhbzvecvk .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1515,15 +1546,15 @@ ht_tbl
   vertical-align: middle;
 }
 
-#rsepkrzyxr .gt_from_md > :first-child {
+#fqhbzvecvk .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#rsepkrzyxr .gt_from_md > :last-child {
+#fqhbzvecvk .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#rsepkrzyxr .gt_row {
+#fqhbzvecvk .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1542,7 +1573,7 @@ ht_tbl
   overflow-x: hidden;
 }
 
-#rsepkrzyxr .gt_stub {
+#fqhbzvecvk .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1554,7 +1585,7 @@ ht_tbl
   padding-left: 12px;
 }
 
-#rsepkrzyxr .gt_summary_row {
+#fqhbzvecvk .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1564,7 +1595,7 @@ ht_tbl
   padding-right: 5px;
 }
 
-#rsepkrzyxr .gt_first_summary_row {
+#fqhbzvecvk .gt_first_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1574,7 +1605,7 @@ ht_tbl
   border-top-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_grand_summary_row {
+#fqhbzvecvk .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1584,7 +1615,7 @@ ht_tbl
   padding-right: 5px;
 }
 
-#rsepkrzyxr .gt_first_grand_summary_row {
+#fqhbzvecvk .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1594,11 +1625,11 @@ ht_tbl
   border-top-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_striped {
-  background-color: rgba(128, 128, 128, 0.05);
+#fqhbzvecvk .gt_striped {
+  background-color: EBF5FB;
 }
 
-#rsepkrzyxr .gt_table_body {
+#fqhbzvecvk .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1607,7 +1638,7 @@ ht_tbl
   border-bottom-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_footnotes {
+#fqhbzvecvk .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1621,13 +1652,13 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_footnote {
+#fqhbzvecvk .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding: 4px;
 }
 
-#rsepkrzyxr .gt_sourcenotes {
+#fqhbzvecvk .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1641,49 +1672,49 @@ ht_tbl
   border-right-color: #D3D3D3;
 }
 
-#rsepkrzyxr .gt_sourcenote {
+#fqhbzvecvk .gt_sourcenote {
   font-size: 90%;
   padding: 4px;
 }
 
-#rsepkrzyxr .gt_left {
+#fqhbzvecvk .gt_left {
   text-align: left;
 }
 
-#rsepkrzyxr .gt_center {
+#fqhbzvecvk .gt_center {
   text-align: center;
 }
 
-#rsepkrzyxr .gt_right {
+#fqhbzvecvk .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#rsepkrzyxr .gt_font_normal {
+#fqhbzvecvk .gt_font_normal {
   font-weight: normal;
 }
 
-#rsepkrzyxr .gt_font_bold {
+#fqhbzvecvk .gt_font_bold {
   font-weight: bold;
 }
 
-#rsepkrzyxr .gt_font_italic {
+#fqhbzvecvk .gt_font_italic {
   font-style: italic;
 }
 
-#rsepkrzyxr .gt_super {
+#fqhbzvecvk .gt_super {
   font-size: 65%;
 }
 
-#rsepkrzyxr .gt_footnote_marks {
+#fqhbzvecvk .gt_footnote_marks {
   font-style: italic;
   font-size: 65%;
 }
 </style>
-<div id="rsepkrzyxr" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+<div id="fqhbzvecvk" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
   <thead class="gt_header">
     <tr>
-      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Weather Types Ranked by Impact on Human Health</th>
+      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Table 3:  Weather Types Ranked by Impact on Human Health</th>
     </tr>
     <tr>
       <th colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>1996-2001</th>
@@ -1691,61 +1722,61 @@ ht_tbl
   </thead>
   <thead class="gt_col_headings">
     <tr>
-      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Event</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">Total Fatalities</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">Total Injuries</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Total Fatalities</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Total Injuries</th>
     </tr>
   </thead>
   <tbody class="gt_table_body">
     <tr>
-      <td class="gt_row gt_left">excessive heat</td>
-      <td class="gt_row gt_right">1797</td>
-      <td class="gt_row gt_right">6391</td>
+      <td class="gt_row gt_left gt_stub">excessive heat</td>
+      <td class="gt_row gt_left">1797</td>
+      <td class="gt_row gt_left">6391</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_striped">tornado</td>
-      <td class="gt_row gt_right gt_striped">1511</td>
-      <td class="gt_row gt_right gt_striped">20667</td>
+      <td class="gt_row gt_left gt_stub">tornado</td>
+      <td class="gt_row gt_left gt_striped">1511</td>
+      <td class="gt_row gt_left gt_striped">20667</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">flash flood</td>
-      <td class="gt_row gt_right">887</td>
-      <td class="gt_row gt_right">1674</td>
+      <td class="gt_row gt_left gt_stub">flash flood</td>
+      <td class="gt_row gt_left">887</td>
+      <td class="gt_row gt_left">1674</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_striped">lightning</td>
-      <td class="gt_row gt_right gt_striped">651</td>
-      <td class="gt_row gt_right gt_striped">4141</td>
+      <td class="gt_row gt_left gt_stub">lightning</td>
+      <td class="gt_row gt_left gt_striped">651</td>
+      <td class="gt_row gt_left gt_striped">4141</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">flood</td>
-      <td class="gt_row gt_right">414</td>
-      <td class="gt_row gt_right">6758</td>
+      <td class="gt_row gt_left gt_stub">flood</td>
+      <td class="gt_row gt_left">414</td>
+      <td class="gt_row gt_left">6758</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_striped">tsunami</td>
-      <td class="gt_row gt_right gt_striped">289</td>
-      <td class="gt_row gt_right gt_striped">3866</td>
+      <td class="gt_row gt_left gt_stub">tsunami</td>
+      <td class="gt_row gt_left gt_striped">289</td>
+      <td class="gt_row gt_left gt_striped">3866</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">heat</td>
-      <td class="gt_row gt_right">237</td>
-      <td class="gt_row gt_right">1222</td>
+      <td class="gt_row gt_left gt_stub">heat</td>
+      <td class="gt_row gt_left">237</td>
+      <td class="gt_row gt_left">1222</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_striped">winter storm</td>
-      <td class="gt_row gt_right gt_striped">191</td>
-      <td class="gt_row gt_right gt_striped">1292</td>
+      <td class="gt_row gt_left gt_stub">winter storm</td>
+      <td class="gt_row gt_left gt_striped">191</td>
+      <td class="gt_row gt_left gt_striped">1292</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left">thunderstorm wind</td>
-      <td class="gt_row gt_right">130</td>
-      <td class="gt_row gt_right">1400</td>
+      <td class="gt_row gt_left gt_stub">thunderstorm wind</td>
+      <td class="gt_row gt_left">130</td>
+      <td class="gt_row gt_left">1400</td>
     </tr>
     <tr>
-      <td class="gt_row gt_left gt_striped">hurricane/typhoon</td>
-      <td class="gt_row gt_right gt_striped">125</td>
-      <td class="gt_row gt_right gt_striped">1328</td>
+      <td class="gt_row gt_left gt_stub">hurricane/typhoon</td>
+      <td class="gt_row gt_left gt_striped">125</td>
+      <td class="gt_row gt_left gt_striped">1328</td>
     </tr>
   </tbody>
   <tfoot class="gt_sourcenotes">
@@ -1755,9 +1786,515 @@ ht_tbl
   </tfoot>
   
 </table></div>
+
+According to the table, *excessive heat* leads to the most deaths, while *tornadoes* lead to the most injuries.  
+
+#### Regional health effects
+
+
+```r
+data$region <- factor(data$STATE, levels = states_territories,
+                         labels = region)
+
+health_data <- data[data$STATE %in% states_territories, ]
 ```
 
-*  Create a new data frame to plot health effects by storm type
+
+```r
+library(gt)
+library(dplyr)
+tab1 = health_data %>% 
+        tibble() %>%
+        group_by(region, event) %>%
+        summarize(total_fatalities = sum(FATALITIES),
+                  total_injuries = sum(INJURIES)) %>%
+        arrange(desc(total_fatalities)) %>% top_n(3) %>%
+        gt(rowname_col = "event") %>%
+        tab_header(
+        title = "Table 4:  Health Effects of Weather Events by Region",
+        subtitle = "1996-2011")  %>% 
+        cols_align(align = "left") %>%
+        tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
+        cols_label(
+                total_fatalities = "Total Fatalities",
+                total_injuries = "Total Injuries"
+                ) %>%
+        #opt_row_striping(row_striping = TRUE) %>%
+        opt_table_outline() %>%
+        tab_options(
+                heading.background.color = "#85C1E9",
+                row_group.background.color = "#EBF5FB",
+                column_labels.background.color = "#D6EAF8"
+        )
+```
+
+```
+## `summarise()` has grouped output by 'region'. You can override using the `.groups` argument.
+```
+
+```
+## Selecting by total_injuries
+```
+
+```r
+print(tab1)
+```
+
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#nnjxckffhr .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 3px;
+  border-top-color: #D3D3D3;
+  border-right-style: solid;
+  border-right-width: 3px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 3px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: solid;
+  border-left-width: 3px;
+  border-left-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_heading {
+  background-color: #85C1E9;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_title {
+  color: #FFFFFF;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#nnjxckffhr .gt_subtitle {
+  color: #FFFFFF;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#nnjxckffhr .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_col_heading {
+  color: #333333;
+  background-color: #D6EAF8;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#nnjxckffhr .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #D6EAF8;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#nnjxckffhr .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#nnjxckffhr .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#nnjxckffhr .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#nnjxckffhr .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #EBF5FB;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#nnjxckffhr .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #EBF5FB;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#nnjxckffhr .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#nnjxckffhr .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#nnjxckffhr .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#nnjxckffhr .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#nnjxckffhr .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nnjxckffhr .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nnjxckffhr .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#nnjxckffhr .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#nnjxckffhr .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nnjxckffhr .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#nnjxckffhr .gt_left {
+  text-align: left;
+}
+
+#nnjxckffhr .gt_center {
+  text-align: center;
+}
+
+#nnjxckffhr .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#nnjxckffhr .gt_font_normal {
+  font-weight: normal;
+}
+
+#nnjxckffhr .gt_font_bold {
+  font-weight: bold;
+}
+
+#nnjxckffhr .gt_font_italic {
+  font-style: italic;
+}
+
+#nnjxckffhr .gt_super {
+  font-size: 65%;
+}
+
+#nnjxckffhr .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="nnjxckffhr" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  <thead class="gt_header">
+    <tr>
+      <th colspan="3" class="gt_heading gt_title gt_font_normal" style>Table 4:  Health Effects of Weather Events by Region</th>
+    </tr>
+    <tr>
+      <th colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>1996-2011</th>
+    </tr>
+  </thead>
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Total Fatalities</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">Total Injuries</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">South</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">tornado</td>
+      <td class="gt_row gt_left">1089</td>
+      <td class="gt_row gt_left">14399</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">lightning</td>
+      <td class="gt_row gt_left">354</td>
+      <td class="gt_row gt_left">2054</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">flood</td>
+      <td class="gt_row gt_left">173</td>
+      <td class="gt_row gt_left">6379</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">Midwest</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">excessive heat</td>
+      <td class="gt_row gt_left">594</td>
+      <td class="gt_row gt_left">4232</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">tornado</td>
+      <td class="gt_row gt_left">397</td>
+      <td class="gt_row gt_left">5247</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">tsunami</td>
+      <td class="gt_row gt_left">82</td>
+      <td class="gt_row gt_left">1368</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">Northeast</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">excessive heat</td>
+      <td class="gt_row gt_left">424</td>
+      <td class="gt_row gt_left">621</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">lightning</td>
+      <td class="gt_row gt_left">60</td>
+      <td class="gt_row gt_left">834</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">tornado</td>
+      <td class="gt_row gt_left">15</td>
+      <td class="gt_row gt_left">720</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">West</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">lightning</td>
+      <td class="gt_row gt_left">113</td>
+      <td class="gt_row gt_left">578</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">winter storm</td>
+      <td class="gt_row gt_left">85</td>
+      <td class="gt_row gt_left">685</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">wildfire</td>
+      <td class="gt_row gt_left">44</td>
+      <td class="gt_row gt_left">696</td>
+    </tr>
+    <tr class="gt_group_heading_row">
+      <td colspan="3" class="gt_group_heading">Territory</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">rip current</td>
+      <td class="gt_row gt_left">54</td>
+      <td class="gt_row gt_left">58</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">tsunami</td>
+      <td class="gt_row gt_left">32</td>
+      <td class="gt_row gt_left">132</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left gt_stub">hurricane/typhoon</td>
+      <td class="gt_row gt_left">22</td>
+      <td class="gt_row gt_left">360</td>
+    </tr>
+  </tbody>
+  <tfoot class="gt_sourcenotes">
+    <tr>
+      <td class="gt_sourcenote" colspan="3">Source:  NOAA Storm Data</td>
+    </tr>
+  </tfoot>
+  
+</table></div>
+
+When you break down the deaths and injuries by region of the country, some big differences become clear.  For example, in the south there were more deaths caused by tornadoes while in the Northeast and Midwest there were more deaths due to excessive heat.
+
+*  Create a new data frame to plot deaths associated  with differents storm types.
 
 
 ```r
@@ -1824,12 +2361,12 @@ g <- ggplot(data=plot2, aes(x=year)) +
 ```
 
 ```r
-print(g)      
+g + scale_fill_brewer(palette="BuPu") + theme_linedraw()
 ```
 
 ![](noaa_files/figure-html/fig2-1.png)<!-- -->
 
-*  Create a new data frame to plot health effects by storm type
+*  Plot total injuries by weather type event.
 
 
 ```r
@@ -1873,11 +2410,18 @@ h <- ggplot(data=plot2, aes(x=year)) +
 ```
 
 ```r
-print(h)  
+h + scale_fill_brewer(palette="BuPu") + theme_linedraw()
 ```
 
 ![](noaa_files/figure-html/fig3-1.png)<!-- -->
 
+```r
+##h + theme_bw()
+```
+
+Figures 2 and 3 show that there is a great deal of yearly variation in the health effects from different weather events.For example, there was a spike in deaths from excessive heat in 1999 and a large number of deaths from tornadoes in 2011.  Likewise, there was a large number of injuries due to flooding in 1998 and a large number of injuries due to tornadoes in 2011. 
+
+
 ### Conclusion
 
-
+This was a very interesting exercise.  I learned that at a national level, flooding causes the most economic damage, while excessive heat leads to the most deaths overall.  However, the economic and health impacts associated with different weather events varies greatly from year to year and by region.
