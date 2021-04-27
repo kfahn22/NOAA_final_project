@@ -7,17 +7,15 @@ output:
     keep_md: true
 ---
 
-
-
 ## Synopsis
 
-I grew up close to Johnstown, PA--the site of one of the greatest floods in the US^[https://www.jaha.org/attractions/johnstown-flood-museum/flood-history/]--so I was not surprised that flooding leads to the most economic damage. Nor was I particularly surprised to learn that drought led to the most crop damage (refer to Table 1).  What I did find surprising is that excessive heat causes the most deaths. Tornadoes led to a greater number of combined injuries (refer to Table 3).  Figures 2 and 3 reveal that there is quite a bit of variation in which events have the greatest impact on human health by year -- in 1998 there were a large number of fatalities due to excessive heat, while in 2011 there were a very large number of fatalities/injuries caused by tornadoes.  
+I grew up close to Johnstown, PA--the site of one of the greatest floods in the US^[https://www.jaha.org/attractions/johnstown-flood-museum/flood-history/]--so I was not surprised that flooding leads to the most economic damage. Nor was I particularly surprised to learn that drought led to the most crop damage (refer to Table 1).^[This assignment required *at most* 3 figures.  After doing some research, I decided that tables are generally NOT considered to be figures.]  What I did find surprising is that excessive heat causes the most deaths. Tornadoes led to a greater number of combined injuries (refer to Table 3).  Figures 2 and 3 reveal that there is quite a bit of variation in which events have the greatest impact on human health by year -- in 1998 there were a large number of fatalities due to excessive heat, while in 2011 there were a very large number of fatalities/injuries caused by tornadoes.  
 
-On a regional level, flooding in the West led to the most economic damage , while drought in the several regions of the country-- the Northeast, South, and West--led to the most crop damage (refer to Table 2). People were more likely to die in the South from a tornado, but more likely to die from excessive heat in the Midwest or Northeast (refer to Table 4).     
+On a regional level, flooding in the West led to the most economic damage, while drought in the several regions of the country-- the Northeast, South, and West--led to the most crop damage (refer to Table 2). People were more likely to die in the South from a tornado, but more likely to die from excessive heat in the Midwest or Northeast (refer to Table 4).     
 
-##  Data Processing
+##  I.  Data Processing
 
-
+There were two options for loading the data: unzipping the file or reading directly from the zipped file.  I decided to read directly from the zipped file.
 
 ```{r cache=TRUE}
 library(downloader)
@@ -26,15 +24,13 @@ download.file(fileUrl, destfile = "noaa.csv.bz2", method="curl")
 data <- read.csv("noaa.csv.bz2")
 ```
 
-I wanted to break the analysis down by region, so I downloaded a csv file with state codes created by KJ Healy. [fipscodes](https://github.com/kjhealy/fips-codes)^[In order to download a csv file from github, you need to click on the link for raw data.]
+I wanted to break the analysis down by region, so I also downloaded a csv file with state codes created by KJ Healy. [fipscodes](https://github.com/kjhealy/fips-codes)^[In order to download a csv file from github, you need to click on the link for raw data.]
 
 ```{r state_region, cache=TRUE}
 fileUrl <- "https://raw.githubusercontent.com/kjhealy/fips-codes/master/state_fips_master.csv"
 download.file(fileUrl, destfile = "state_codes.csv", method="curl")
 state_codes <- read.csv("state_codes.csv")
 ```
-
-### I.  Data Transformation
 
 #### Check out data and delete unnecessary columns
 
@@ -96,7 +92,7 @@ wc <- grepl("windchill", data$event)
 
 ```
 
-```{r replace_names}
+```{r replace_names, cache=TRUE}
 library(stringr)
 data$event[a == TRUE] <- "volcanic ash"
 data$event[c == TRUE | cf == TRUE] <- "coastal flood"
@@ -122,7 +118,7 @@ data$event <- str_replace_all(data$event, "ice fog", "freezing fog")
 
 There are some event names that are are not clearly in one of the standarized event types.  I decided to delete these instances from the data base. I checked to see which events did not match the official list after the above standardization.  
 
-```{r check_names}
+```{r check_names, cache=TRUE}
 library(dplyr)
 bad_names <- setdiff(data$event, official_event_names)
 bn <- length(bad_names)
@@ -138,7 +134,7 @@ I made the following tranformations to the CROPDMG and PROPDMG.^[I found this gu
 * Filter data set to exclude rows w/ either missing data for PROPDMGEXP or CROPDMGEXP
 * Created a function to adjust for different units in CROPDMGEXP and PROPDMGEXP
 
-```{r filter_NA}
+```{r filter_NA, cache=TRUE}
 econ_df <- data[data$CROPDMGEXP != "" | 
                         data$PROPDMGEXP != "", ]
 ```
@@ -165,7 +161,7 @@ transform <- function (x, y) {
 
 * Use **transform** to adjust CROPDMG and PROPDMG to account for the different units in the original data base.
 
-```{r, units}
+```{r, units, cache=TRUE}
 econ_df$units_adj_cropdmg <- mapply(transform, 
                 econ_df$CROPDMGEXP, econ_df$CROPDMG)
 econ_df$units_adj_propdmg <- mapply(transform, 
@@ -177,14 +173,14 @@ After all of the cleaning, the econ_df data set contains `r econ_length` observa
 
 #### Create a factor variable for the region of the country
 
-* There are 50 states plus the DC and 5 territories.
+* There are 50 states plus the DC and 5 territories.[hud.gov](hud.gov/sites/documents/22211X2CHCH.PDF)
 
 ```{r states}
 states_territories <- c(state_codes$state_abbr, "AS", "GU", "PR", "VI", "MP")
 length <- length(unique(econ_df$STATE))
 ```
 
-Therefore, there should be 56 unique state codes. However, there are  `r length` unique codes in the STATE variable. There is no way to determine what code should have been entered, so when I do the regional analysis I have filtered out the observations associated with the 13 invalid state codes plus DC when creating the table on economic damage by region.^[Wen I created the table on regional effects, there was so little data for DC that it was not filtering properly so it was not included in the regional tables.]    
+Therefore, there should be 56 unique state codes. However, there are  `r length` unique codes in the STATE variable. There is no way to determine what code should have been entered, so when I do the regional analysis I have filtered out the observations associated with the 13 invalid state codes plus DC when creating the table on economic damage by region.^[When I created the table on regional effects, there was so little data for DC that it was not filtering properly so it was not included in the regional tables.]    
 
 *  create a factor variable for the region of the country
 
@@ -195,14 +191,13 @@ econ_df$region <- factor(econ_df$STATE, levels = states_territories,
                          labels = region)
 ```
 
+## II.  Results
 
-### II.  Data Analysis
-
-#### A.  Economic Impact of Storms by Event Type
+### Economic Impact of Storms by Event Type
 
 We were asked to explore which weather event type causes the most economic damage. To answer this question, I first found the total property and crop damage for each event type and ranked by total property damage.  I then found the top three destructive weather types by region of the country.   
 
-* Find total property and crop damage by year for each event type and rank to find the 10 most expensive types.
+* Create a table showing the total property and crop damage by year for each event type and rank to find the 10 most expensive types. I used the package gt to create my tables.  The documentation for this package can be found here.[https://gt.rstudio.com/articles/intro-creating-gt-tables.html] 
 
 ```{r table_1, results="asis"}
 library(gt)
@@ -238,61 +233,7 @@ tab = econ_df %>%
 print(tab)
 ```
 
-The most economic damage was cased by *floods*, followed by *hurricanes/tornadoes*. *Drought* led to the most crop damage.  
-
-* Create factor variable for regions--adding territories
-which can be found here[hud.gov](hud.gov/sites/documents/22211X2CHCH.PDF)
-
-#### Filter data set to remove invalid state codes
-
-*  create a factor variable for the region of the country
-*  filter for valid state codes 
-
-```{r filter_region}
-econ_df <- econ_df[econ_df$STATE %in% states_territories, ]
-```
-
-*  Create a table with the total property damage by region.  I used the package gt to create my tables.  The documentation for this package can be found here.[https://gt.rstudio.com/articles/intro-creating-gt-tables.html]  This package is fairly new, so I also read the very helpful tutorial at [towarddatascience.com](https://towardsdatascience.com/exploring-the-gt-grammar-of-tables-package-in-r-7fff9d0b40cd) 
-
-*  group by region and event and find total property and crop damage
-*  arrange in descending order by total property damage and report top 3
-
-
-```{r table_2, results = "asis"}
-library(gt)
-library(dplyr)
-tab1 = econ_df %>% 
-        tibble() %>%
-        group_by(region, event) %>%
-        summarize(total_property_damage = 
-                          sum(units_adj_propdmg)/10^6,
-                  total_crop_damage = 
-                          sum(units_adj_cropdmg)/10^6)%>%
-        arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(3)          %>%
-        gt(rowname_col = "event") %>%
-        tab_header(
-        title = "Table 2:  Most Costly Weather Events by Region (Millions)",
-        subtitle = "1996-2011")  %>% 
-        cols_align(align = "left") %>%
-        tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
-        fmt_currency(
-                columns = vars(total_property_damage, total_crop_damage), 
-                currency = "USD", decimals = 0)  %>%
-        cols_label(
-                total_property_damage = "Total Property Damage",
-                total_crop_damage = "Total Crop Damage"
-                ) %>%
-        opt_row_striping(row_striping = TRUE) %>%
-        opt_table_outline() %>%
-        tab_options(
-                heading.background.color = "#85C1E9",
-                row_group.background.color = "#EBF5FB",
-                column_labels.background.color = "#D6EAF8"
-        )
-print(tab1)
-```
-
-*Flooding* in the West led to the most economic damage, followed by *hurricane/tornado* damage in the South. 
+The most economic damage was cased by floods, followed by hurricanes/typhoons. Droughts led to the most crop damage.  
 
 #### Create plot of yearly economic damage by the top 5 most destructive weather event types.  
 
@@ -333,13 +274,66 @@ d <- ggplot(data=plot, aes(year)) +
         labs(y="total cost", 
         title="Total Property and Crop Damage, 1996-2011", 
         subtitle=("log(Millions of US Dollars)"), 
-        caption = "Figure 1") +
+        caption = "Figure 1:  Flooding and hurricanes in the mid-2000s caused the most economic damage.") +
         facet_grid(.~ event) + 
         coord_cartesian(ylim=c(0, log(m))) 
-d + scale_colour_manual(values = c("#85C1E9", "#845EC2")) + theme_linedraw()      
+d + scale_colour_manual(values = c("#85C1E9", "#845EC2")) + theme_linedraw() +     theme(plot.caption = element_text(hjust = 0)
+         )
 ```
 
-### B.  Human Impact of Weather Events 
+This plot reveals that while there is a great deal of yearly variation, flooding and hurricanes caused a huge amount of economic damage in the mid-2000s.  
+
+#### Filter data set to remove invalid state codes
+
+I waited until after I had investigated the effects on a national level before subsetting the data set for valid state codes.  
+
+
+```{r filter_region}
+econ_df <- econ_df[econ_df$STATE %in% states_territories, ]
+```
+
+*   The gt package is fairly new, so I read the very helpful tutorial at [towarddatascience.com](https://towardsdatascience.com/exploring-the-gt-grammar-of-tables-package-in-r-7fff9d0b40cd) to create the table on regional economic effects of different weather events.
+
+*  group by region and event and find total property and crop damage
+*  arrange in descending order by total property damage and report top 3
+
+```{r table_2, results = "asis"}
+library(gt)
+library(dplyr)
+tab1 = econ_df %>% 
+        tibble() %>%
+        group_by(region, event) %>%
+        summarize(total_property_damage = 
+                          sum(units_adj_propdmg)/10^6,
+                  total_crop_damage = 
+                          sum(units_adj_cropdmg)/10^6)%>%
+        arrange(desc(total_property_damage, total_crop_damage)) %>% top_n(3)          %>%
+        gt(rowname_col = "event") %>%
+        tab_header(
+        title = "Table 2:  Most Costly Weather Events by Region (Millions)",
+        subtitle = "1996-2011")  %>% 
+        cols_align(align = "left") %>%
+        tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
+        fmt_currency(
+                columns = vars(total_property_damage, total_crop_damage), 
+                currency = "USD", decimals = 0)  %>%
+        cols_label(
+                total_property_damage = "Total Property Damage",
+                total_crop_damage = "Total Crop Damage"
+                ) %>%
+        opt_row_striping(row_striping = TRUE) %>%
+        opt_table_outline() %>%
+        tab_options(
+                heading.background.color = "#85C1E9",
+                row_group.background.color = "#EBF5FB",
+                column_labels.background.color = "#D6EAF8"
+        )
+print(tab1)
+```
+
+Hurricane/typhoons and flooding in the South led to the greatest amount of economic damage. 
+
+### Human Impact of Weather Events 
 
 We were asked to explore which weather event type causes the most harm to human health. To answer this question, I first found the total number of fatalities and injuries for each event type.  I then found the top ten most impactful weather types.   
 
@@ -390,7 +384,7 @@ print(ht_tbl)
 
 ```
 
-According to the table, *excessive heat* leads to the most deaths, while *tornadoes* lead to the most injuries.  
+According to the table, excessive heat leads to the most deaths, while tornadoes lead to the most injuries.  
 
 #### Regional health effects
 
@@ -410,17 +404,18 @@ tab1 = health_data %>%
         summarize(total_fatalities = sum(FATALITIES),
                   total_injuries = sum(INJURIES)) %>%
         arrange(desc(total_fatalities)) %>% top_n(3) %>%
-        gt(rowname_col = "event") %>%
+        gt(rowname_col = "event" ) %>%
         tab_header(
         title = "Table 4:  Health Effects of Weather Events by Region",
         subtitle = "1996-2011")  %>% 
         cols_align(align = "left") %>%
         tab_source_note(source_note = "Source:  NOAA Storm Data")  %>% 
         cols_label(
+                event = "Event",
                 total_fatalities = "Total Fatalities",
                 total_injuries = "Total Injuries"
                 ) %>%
-        #opt_row_striping(row_striping = TRUE) %>%
+        opt_row_striping(row_striping = TRUE) %>%
         opt_table_outline() %>%
         tab_options(
                 heading.background.color = "#85C1E9",
@@ -430,9 +425,17 @@ tab1 = health_data %>%
 print(tab1)
 ```
 
-When you break down the deaths and injuries by region of the country, some big differences become clear.  For example, in the south there were more deaths caused by tornadoes while in the Northeast and Midwest there were more deaths due to excessive heat.
+When you break down the deaths and injuries by region of the country, some big differences become clear.  For example, in the South there were more deaths caused by tornadoes while in the Northeast and Midwest there were more deaths due to excessive heat.  It was surprising to learn that there were dangerous tsunamis in the Midwest (where I happen to live.)  I did some research and found out that they are a common phenomenon in the Great Lakes called meteotsunamis.^[Technically, the events were originally coded as "tsunami wind."]  
 
-*  Create a new data frame to plot deaths associated  with differents storm types.
+```{r midwest}
+midwest_tsunami <- filter(data, region == "Midwest" & event == "tsunami")
+mwt <- filter(data, data$region == "Midwest" & data$event == "tsunami" & data$FATALITIES > 0) 
+print(head(mwt))
+```
+
+#### Plot Fatalities and Injuries for weather events by year 
+
+*  Create a new data frame to plot deaths associated with different storm types.
 
 ```{r fig2, fig.width=10, fig.height=8}
 
@@ -454,9 +457,9 @@ g <- ggplot(data=plot2, aes(x=year)) +
        geom_col(aes(y=total_fatalities, fill=event)) +
        labs(title="Total Fatalties by Weather Event Type, 1996-2011",
        y="total number of persons",
-       caption="Figure 2")  
+       caption="Figure 2:  Excessive heat consistently causes a lot of yearly deaths, but tornadoes led to the most deaths in 2011.")  
        coord_cartesian(ylim=c(0, f)) 
-g + scale_fill_brewer(palette="BuPu") + theme_linedraw()
+g + scale_fill_brewer(palette="BuPu") + theme_linedraw() + theme(plot.caption        = element_text(hjust = 0))
 ```
 
 *  Plot total injuries by weather type event.
@@ -464,21 +467,21 @@ g + scale_fill_brewer(palette="BuPu") + theme_linedraw()
 ```{r fig3, fig.width=10, fig.height=8}
 
 #plot <- filter(df, event %in% top_damage$event)
-i<- max(plot2$total_fatalities)
+i<- max(plot2$total_injuries)
 
 h <- ggplot(data=plot2, aes(x=year)) +
        geom_col(aes(y=total_injuries, fill=event)) +
        labs(title="Total Injuries by Weather Event Type, 1996-2011",
        y="total number of persons",
-       caption="Figure 3")  
+       caption="Figure 3:  While tornadoes generally cause the most injuries, flooding in 1998 led to a spike in injuries.")  
        coord_cartesian(ylim=c(0, i)) 
-h + scale_fill_brewer(palette="BuPu") + theme_linedraw()
+h + scale_fill_brewer(palette="BuPu") + theme_linedraw() + theme(plot.caption        = element_text(hjust = 0))
 ##h + theme_bw()
 ```
 
 Figures 2 and 3 show that there is a great deal of yearly variation in the health effects from different weather events.For example, there was a spike in deaths from excessive heat in 1999 and a large number of deaths from tornadoes in 2011.  Likewise, there was a large number of injuries due to flooding in 1998 and a large number of injuries due to tornadoes in 2011. 
 
 
-### Conclusion
+## Conclusion
 
-This was a very interesting exercise.  I learned that at a national level, flooding causes the most economic damage, while excessive heat leads to the most deaths overall.  However, the economic and health impacts associated with different weather events varies greatly from year to year and by region.
+This was a very interesting exercise.  I learned that at a national level, flooding causes the most economic damage, while excessive heat leads to the most deaths overall.  However, the economic and health impacts associated with different weather events vary greatly from year to year and by region.
